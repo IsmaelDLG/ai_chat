@@ -1,18 +1,22 @@
 from functools import lru_cache
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
+
 class Settings(BaseSettings):
     app_name: str = "AI Chat API"
     environment: str = "development"
 
     llm_base_url: str = "http://127.0.0.1:11434/v1/"
     llm_api_key: str = "ollama"
-    llm_model: str = "qwen2.5-coder:7b"
+    llm_model: str
+
+    db_user: str
+    db_password: str
+    db_host: str
+    db_name: str
 
     model_config = SettingsConfigDict(
-        env_file=".env",
-        env_file_encoding="utf-8",
-        extra="ignore"
+        env_file=".env", env_file_encoding="utf-8", extra="ignore"
     )
 
 

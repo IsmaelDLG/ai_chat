@@ -1,6 +1,6 @@
 from fastapi import APIRouter
 
-from app.schemas.chat import ChatRequest, ChatResponse
+from app.api.schemas.chat import ChatRequest, ChatResponse
 from app.services.chat import ChatService
 
 router = APIRouter(prefix="/api", tags=["chat"])
@@ -8,8 +8,8 @@ router = APIRouter(prefix="/api", tags=["chat"])
 chat_service = ChatService()
 
 
-@router.post("/chat", response_model=ChatResponse)
+@router.post("/", response_model=ChatResponse)
 async def chat(request: ChatRequest):
-    response = await chat_service.chat(request.message)
+    response = await chat_service.chat(request.content)
 
     return ChatResponse(response=response)
