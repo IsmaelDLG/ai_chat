@@ -10,7 +10,7 @@ client = AsyncOpenAI(
 
 
 class ChatService:
-    async def chat(self, message: str) -> str:
+    async def send_message(self, message: str) -> str:
 
         response = await client.responses.create(
             model=settings.llm_model,

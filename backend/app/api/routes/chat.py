@@ -10,6 +10,6 @@ chat_service = ChatService()
 
 @router.post("/", response_model=ChatResponse)
 async def chat(request: ChatRequest):
-    response = await chat_service.chat(request.content)
+    response = await chat_service.send_message(request.content)
 
     return ChatResponse(response=response)
