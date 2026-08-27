@@ -2,7 +2,7 @@ from unittest.mock import AsyncMock, MagicMock
 import pytest
 
 from app.api.schemas.conversation import ConversationCreateDTO as requestDTO
-from app.api.schemas.conversation import ConversatioDTO as responseDTO
+from app.api.schemas.conversation import ConversationDTO as responseDTO
 from app.services.conversation import (
     ConversationService,
 )  # Ajusta este import a tu ruta real
@@ -16,14 +16,14 @@ async def test_create_conversation_success():
     dto_input = MagicMock(spec=requestDTO)
     expected_dto_response = MagicMock(spec=responseDTO)
 
-    mock_repository.create = AsyncMock(return_value=expected_dto_response)
+    mock_repository.save = AsyncMock(return_value=expected_dto_response)
 
-    service = ConversationService(repository=mock_repository)
+    service = ConversationService(mock_repository)
 
     # Act
     result = await service.create_conversation(dto_input)
 
     # Test
-    mock_repository.create.assert_called_once_with(dto_input)
+    mock_repository.save.assert_called_once_with(dto_input)
 
     assert result == expected_dto_response

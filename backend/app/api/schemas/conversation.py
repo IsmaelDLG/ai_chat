@@ -6,13 +6,7 @@ class ConversationCreateDTO(BaseModel):
     title: str
     created_at: datetime = datetime.now()
 
-
-class ConversationUpdate(BaseModel):
-    title: str | None = None
-    updated_at: datetime | None = None
-
-
-class ConversatioDTO(BaseModel):
+class ConversationDTO(BaseModel):
     id: int
     title: str
     created_at: datetime
