@@ -12,22 +12,19 @@ async def test_message():
     # Prepare
     settings = get_settings()
 
-    responseDTO = MessageDTO(
-        id=1,
-        conversation_id=1,
-        role=Role.ASSISTANT,
-        content="Bien, y tú?",
-        created_at=datetime.now(),
-    )
-
     dto_input = MessageCreateFullDTO(
         conversation_id=1,
         role=Role.USER,
         content="Hola, ¿cómo estás?",
     )
 
-    expected_dto_response = MagicMock(spec=responseDTO)
-
+    expected_dto_response = MessageDTO(
+        id=1,
+        conversation_id=1,
+        role=Role.ASSISTANT,
+        content="Bien, y tú?",
+        created_at=datetime.now(),
+    )
     mock_repository = MagicMock()
     mock_repository.save = AsyncMock(return_value=expected_dto_response)
 
