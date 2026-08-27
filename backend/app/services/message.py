@@ -1,9 +1,8 @@
 from openai import AsyncOpenAI
 from app.core.config import get_settings
 
-from app.api.schemas.message import MessageCreateDTO, MessageDTO, Role
-from app.dataaccess.repositories.conversation import ConversationRepository
-
+from app.api.schemas.message import MessageCreateFullDTO, MessageDTO, Role
+from app.dataaccess.repositories.message import MessageRepository
 
 settings = get_settings()
 
@@ -12,11 +11,12 @@ client = AsyncOpenAI(
     api_key=settings.llm_api_key,
 )
 
+
 class MessageService:
-    def __init__(self, repo: ConversationRepository):
+    def __init__(self, repo: MessageRepository):
         self.repository = repo
 
-    async def send_message(self, message: MessageCreateDTO) -> MessageDTO:
+    async def send_message(self, message: MessageCreateFullDTO) -> MessageDTO:
         await self.repository.save(message)
 
         response = await client.responses.create(
@@ -24,13 +24,11 @@ class MessageService:
             input=message.content,
         )
 
-        responseDTO = MessageCreateDTO(
+        assistant_message = MessageCreateFullDTO(
             conversation_id=message.conversation_id,
             role=Role.ASSISTANT,
-            content= response.output_text
+            content=response.output_text,
         )
-        result: MessageDTO = await self.repository.save(responseDTO)
+        result: MessageDTO = await self.repository.save(assistant_message)
 
         return result
-
-

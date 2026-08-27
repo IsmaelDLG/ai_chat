@@ -227,15 +227,15 @@ añadir persistencia del contexto de conversación.
 
 ## Pendiente
 
-- [ ] Definir correctamente `conversation_id`
-- [ ] Crear modelo `Conversation`
-- [ ] Crear modelo `Message`
-- [ ] Añadir PostgreSQL
-- [ ] Añadir SQLAlchemy
-- [ ] Añadir Alembic
-- [ ] Crear migraciones
-- [ ] Guardar mensajes de usuario
-- [ ] Guardar respuestas del asistente
+- [x] Definir correctamente `conversation_id`
+- [x] Crear modelo `Conversation`
+- [x] Crear modelo `Message`
+- [x] Añadir PostgreSQL
+- [x] Añadir SQLAlchemy
+- [x] Añadir Alembic
+- [x] Crear migraciones
+- [x] Guardar mensajes de usuario
+- [x] Guardar respuestas del asistente
 - [ ] Recuperar historial
 - [ ] Enviar historial relevante al LLM
 - [ ] Endpoint para recuperar una conversación

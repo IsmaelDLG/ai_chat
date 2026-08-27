@@ -1,10 +1,11 @@
-from pydantic import BaseModel, ConfigDict
-from datetime import datetime
+from pydantic import BaseModel, ConfigDict, Field
+from datetime import datetime, timezone as tz
 
 
 class ConversationCreateDTO(BaseModel):
     title: str
-    created_at: datetime = datetime.now()
+    created_at: datetime = Field(default_factory=lambda: datetime.now(tz.utc))
+
 
 class ConversationDTO(BaseModel):
     id: int

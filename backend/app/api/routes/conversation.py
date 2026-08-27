@@ -4,7 +4,7 @@ from app.api.schemas.conversation import ConversationCreateDTO, ConversationDTO
 from app.services.conversation import ConversationService
 from app.api.deps import get_conversation_service
 
-router = APIRouter(prefix="/api", tags=["conversation"])
+router = APIRouter(prefix="/api/conversations", tags=["conversation"])
 
 
 @router.post("", response_model=ConversationDTO)

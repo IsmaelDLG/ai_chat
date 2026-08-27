@@ -8,6 +8,7 @@ from app.services.conversation import ConversationService
 from app.dataaccess.repositories.message import MessageRepository
 from app.services.message import MessageService
 
+
 def get_conversation_repository(
     db: AsyncSession = Depends(get_db),
 ) -> ConversationRepository:
@@ -19,10 +20,12 @@ def get_conversation_service(
 ) -> ConversationService:
     return ConversationService(repo)
 
+
 def get_message_repository(
     db: AsyncSession = Depends(get_db),
 ) -> MessageRepository:
     return MessageRepository(db)
+
 
 def get_message_service(
     repo: MessageRepository = Depends(get_message_repository),

@@ -1,9 +1,10 @@
 from app.dataaccess.models.message import Messages
-from app.api.schemas.message import MessageCreateDTO, MessageDTO
+from app.api.schemas.message import MessageCreateFullDTO, MessageDTO
 from app.dataaccess.repositories.base import BaseRepository
 
+
 class MessageRepository(BaseRepository):
-    async def save(self, dto: MessageCreateDTO) -> MessageDTO:
+    async def save(self, dto: MessageCreateFullDTO) -> MessageDTO:
         message = Messages(**dto.model_dump())
 
         self.db.add(message)
