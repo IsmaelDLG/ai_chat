@@ -15,6 +15,7 @@ async def create(
     response: ConversationDTO = await service.create_conversation(dto)
     return response
 
+
 @router.get("", response_model=list[ConversationDTO])
 async def get_all(
     service: ConversationService = Depends(get_conversation_service),

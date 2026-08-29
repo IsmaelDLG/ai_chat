@@ -13,11 +13,13 @@ class MessageSaveError(Exception):
         self.content = content
         super().__init__(f'Message with content: "{content}" could not be saved.')
 
+
 class ConversationSaveError(Exception):
     """Thrown when a conversation cannot be saved in DDBB"""
 
     def __init__(self):
         super().__init__("Conversation could not be saved.")
+
 
 class LLMNotAvailableError(Exception):
     """Thrown when llm is not available"""

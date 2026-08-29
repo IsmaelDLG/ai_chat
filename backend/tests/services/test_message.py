@@ -144,7 +144,9 @@ async def test_get_messages():
     ]
 
     mock_message_repository = MagicMock()
-    mock_message_repository.get_by_conversation_id = AsyncMock(return_value=messages_dto_response)
+    mock_message_repository.get_by_conversation_id = AsyncMock(
+        return_value=messages_dto_response
+    )
 
     mock_conversation_repository = MagicMock()
     mock_conversation_repository.get_by_id = AsyncMock(return_value=conversation_dto)
@@ -158,6 +160,8 @@ async def test_get_messages():
     # Assert
     mock_conversation_repository.get_by_id.assert_awaited_once_with(conversation_id)
 
-    mock_message_repository.get_by_conversation_id.assert_awaited_once_with(conversation_id)
+    mock_message_repository.get_by_conversation_id.assert_awaited_once_with(
+        conversation_id
+    )
 
     assert result == messages_dto_response

@@ -20,7 +20,10 @@ class ConversationRepository(BaseRepository):
         stmt = select(Conversations)
         result = await self.session.execute(stmt)
         conversations = result.scalars().all()
-        return [ConversationDTO.model_validate(conversation) for conversation in conversations]
+        return [
+            ConversationDTO.model_validate(conversation)
+            for conversation in conversations
+        ]
 
     async def get_by_id(self, conversation_id: int) -> ConversationDTO | None:
         result = await self.session.get(Conversations, conversation_id)

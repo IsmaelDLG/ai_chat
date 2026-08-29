@@ -9,6 +9,7 @@ from app.services.conversation import (
 )  # Ajusta este import a tu ruta real
 from app.core.exceptions import ConversationSaveError
 
+
 @pytest.mark.asyncio
 async def test_create_conversation_success():
     # Prepare
@@ -44,6 +45,7 @@ async def test_create_conversation_error():
 
     with pytest.raises(ConversationSaveError):
         await service.create_conversation(dto_input)
+
 
 @pytest.mark.asyncio
 async def test_get_all_conversations_success():
