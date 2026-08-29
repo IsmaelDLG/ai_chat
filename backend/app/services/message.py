@@ -67,7 +67,11 @@ class MessageService:
             role=Role.ASSISTANT,
             content=response.output_text,
         )
-        result: MessageDTO = await self.repository.save(assistant_message)
+        try:
+            result: MessageDTO = await self.repository.save(assistant_message)
+        except Exception:
+            raise MessageSaveError(assistant_message.content)
+
         await self.conv_repository.update_updated_at(conversation_id)
 
         return result

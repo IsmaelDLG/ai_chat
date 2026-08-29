@@ -17,7 +17,7 @@ class ConversationRepository(BaseRepository):
         return result
 
     async def get_all(self) -> list[ConversationDTO]:
-        stmt = select(Conversations)
+        stmt = select(Conversations).order_by(Conversations.updated_at.desc())
         result = await self.session.execute(stmt)
         conversations = result.scalars().all()
         return [

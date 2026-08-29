@@ -6,7 +6,11 @@ from app.core.config import get_settings
 from app.services.message import MessageService
 from app.api.schemas.message import MessageCreateFullDTO, MessageDTO, Role
 from app.api.schemas.conversation import ConversationDTO
-from app.core.exceptions import ConversationNotFoundError
+from app.core.exceptions import (
+    ConversationNotFoundError,
+    MessageSaveError,
+    LLMNotAvailableError,
+)
 
 
 @pytest.mark.asyncio
@@ -33,6 +37,83 @@ async def test_send_message_conversation_not_found():
         dto_input.conversation_id
     )
     mock_message_repository.save.assert_not_called()
+
+
+@pytest.mark.asyncio
+async def test_send_message_user_save_error():
+    # Arrange
+
+    dto_input = MessageCreateFullDTO(
+        conversation_id=1,
+        role=Role.USER,
+        content="Hola, ¿cómo estás?",
+    )
+
+    conversation_dto = ConversationDTO(
+        id=1, title="test", created_at=datetime.now(), updated_at=datetime.now()
+    )
+
+    mock_message_repository = MagicMock()
+    expected_exc = Exception("Cannot save message")
+    mock_message_repository.save = AsyncMock(side_effect=expected_exc)
+
+    mock_conversation_repository = MagicMock()
+    mock_conversation_repository.get_by_id = AsyncMock(return_value=conversation_dto)
+    mock_conversation_repository.update_updated_at = AsyncMock()
+
+    service = MessageService(mock_message_repository, mock_conversation_repository)
+
+    # Act & Assert
+    with pytest.raises(MessageSaveError):
+        await service.send_message(dto_input)
+
+    mock_conversation_repository.get_by_id.assert_awaited_once_with(
+        dto_input.conversation_id
+    )
+
+    mock_message_repository.save.assert_awaited_once_with(dto_input)
+
+
+@pytest.mark.asyncio
+async def test_send_message_llm_error():
+    # Arrange
+    settings = get_settings()
+
+    dto_input = MessageCreateFullDTO(
+        conversation_id=1,
+        role=Role.USER,
+        content="Hola, ¿cómo estás?",
+    )
+
+    conversation_dto = ConversationDTO(
+        id=1, title="test", created_at=datetime.now(), updated_at=datetime.now()
+    )
+
+    mock_message_repository = MagicMock()
+    mock_message_repository.save = AsyncMock()
+
+    mock_conversation_repository = MagicMock()
+    mock_conversation_repository.get_by_id = AsyncMock(return_value=conversation_dto)
+    mock_conversation_repository.update_updated_at = AsyncMock()
+
+    with patch("app.services.message.client") as mock_client:
+        mock_client.responses.create = AsyncMock(side_effect=Exception("LLM Error"))
+
+        service = MessageService(mock_message_repository, mock_conversation_repository)
+
+        # Act & Arrange
+        with pytest.raises(LLMNotAvailableError):
+            await service.send_message(dto_input)
+
+        mock_conversation_repository.get_by_id.assert_awaited_once_with(
+            dto_input.conversation_id
+        )
+        mock_message_repository.save.assert_awaited_once_with(dto_input)
+        mock_client.responses.create.assert_awaited_once_with(
+            model=settings.llm_model,
+            input=dto_input.content,
+        )
+        mock_conversation_repository.update_updated_at.assert_not_awaited()
 
 
 @pytest.mark.asyncio
