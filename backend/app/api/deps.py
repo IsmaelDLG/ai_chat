@@ -28,6 +28,7 @@ def get_message_repository(
 
 
 def get_message_service(
-    repo: MessageRepository = Depends(get_message_repository),
+    msg_repo: MessageRepository = Depends(get_message_repository),
+    conv_repo: ConversationRepository = Depends(get_conversation_repository),
 ) -> MessageService:
-    return MessageService(repo)
+    return MessageService(msg_repo, conv_repo)
