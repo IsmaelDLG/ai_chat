@@ -8,10 +8,10 @@ from app.core.exceptions import (
     LLMNotAvailableError,
 )
 
-from app.api.schemas.message import MessageCreateFullDTO, MessageDTO, Role
+from app.models.message import MessageCreateFullDTO, MessageDTO, Role
 from app.dataaccess.repositories.conversation import ConversationRepository
 from app.dataaccess.repositories.message import MessageRepository
-from app.api.schemas.conversation import ConversationDTO
+from app.models.conversation import ConversationDTO
 
 settings = get_settings()
 

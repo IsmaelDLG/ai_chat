@@ -1,5 +1,5 @@
-from app.api.schemas.conversation import ConversationCreateDTO as requestDTO
-from app.api.schemas.conversation import ConversationDTO as responseDTO
+from app.models.conversation import ConversationCreateDTO as requestDTO
+from app.models.conversation import ConversationDTO as responseDTO
 from app.dataaccess.repositories.conversation import ConversationRepository
 from app.core.exceptions import ConversationSaveError
 

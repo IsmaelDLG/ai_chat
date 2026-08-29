@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends
 
-from app.api.schemas.conversation import ConversationCreateDTO, ConversationDTO
+from app.models.conversation import ConversationCreateDTO, ConversationDTO
 from app.services.conversation import ConversationService
 from app.api.deps import get_conversation_service
 

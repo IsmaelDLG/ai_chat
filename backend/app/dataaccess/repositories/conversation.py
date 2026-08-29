@@ -1,5 +1,5 @@
 from app.dataaccess.models.conversation import Conversations
-from app.api.schemas.conversation import ConversationCreateDTO, ConversationDTO
+from app.models.conversation import ConversationCreateDTO, ConversationDTO
 from app.dataaccess.repositories.base import BaseRepository
 from datetime import datetime, timezone as tz
 from sqlalchemy import update, select

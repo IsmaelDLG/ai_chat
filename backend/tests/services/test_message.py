@@ -1,11 +1,11 @@
 from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
-from datetime import datetime
+from datetime import datetime, timezone as tz
 
 from app.core.config import get_settings
 from app.services.message import MessageService
-from app.api.schemas.message import MessageCreateFullDTO, MessageDTO, Role
-from app.api.schemas.conversation import ConversationDTO
+from app.models.message import MessageCreateFullDTO, MessageDTO, Role
+from app.models.conversation import ConversationDTO
 from app.core.exceptions import (
     ConversationNotFoundError,
     MessageSaveError,
@@ -50,7 +50,7 @@ async def test_send_message_user_save_error():
     )
 
     conversation_dto = ConversationDTO(
-        id=1, title="test", created_at=datetime.now(), updated_at=datetime.now()
+        id=1, title="test", created_at=datetime.now(tz.utc), updated_at=datetime.now(tz.utc)
     )
 
     mock_message_repository = MagicMock()
@@ -86,7 +86,7 @@ async def test_send_message_llm_error():
     )
 
     conversation_dto = ConversationDTO(
-        id=1, title="test", created_at=datetime.now(), updated_at=datetime.now()
+        id=1, title="test", created_at=datetime.now(tz.utc), updated_at=datetime.now(tz.utc)
     )
 
     mock_message_repository = MagicMock()
@@ -128,7 +128,7 @@ async def test_send_message():
     )
 
     conversation_dto = ConversationDTO(
-        id=1, title="test", created_at=datetime.now(), updated_at=datetime.now()
+        id=1, title="test", created_at=datetime.now(tz.utc), updated_at=datetime.now(tz.utc)
     )
 
     assistant_dto_response = MessageDTO(
@@ -136,7 +136,7 @@ async def test_send_message():
         conversation_id=1,
         role=Role.ASSISTANT,
         content="Bien, y tú?",
-        created_at=datetime.now(),
+        created_at=datetime.now(tz.utc),
     )
 
     mock_message_repository = MagicMock()
@@ -203,8 +203,8 @@ async def test_get_messages():
     conversation_dto = ConversationDTO(
         id=conversation_id,
         title="test",
-        created_at=datetime.now(),
-        updated_at=datetime.now(),
+        created_at=datetime.now(tz.utc),
+        updated_at=datetime.now(tz.utc),
     )
 
     messages_dto_response = [
@@ -213,14 +213,14 @@ async def test_get_messages():
             conversation_id=conversation_id,
             role=Role.ASSISTANT,
             content="Bien, y tú?",
-            created_at=datetime.now(),
+            created_at=datetime.now(tz.utc),
         ),
         MessageDTO(
             id=3,
             conversation_id=conversation_id,
             role=Role.USER,
             content="¿Y tú?",
-            created_at=datetime.now(),
+            created_at=datetime.now(tz.utc),
         ),
     ]
 

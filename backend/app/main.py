@@ -5,7 +5,7 @@ from app.core.exceptions import (
     ConversationNotFoundError,
     ConversationSaveError,
     MessageSaveError,
-    LLMNotAvailableError,
+    LLMNotAvailableError
 )
 
 from app.api.routes.health import router as health_router

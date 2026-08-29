@@ -1,7 +1,7 @@
 from sqlalchemy import select
 
 from app.dataaccess.models.message import Messages
-from app.api.schemas.message import MessageCreateFullDTO, MessageDTO
+from app.models.message import MessageCreateFullDTO, MessageDTO
 from app.dataaccess.repositories.base import BaseRepository
 
 

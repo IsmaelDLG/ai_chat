@@ -2,8 +2,8 @@
 from unittest.mock import AsyncMock, MagicMock
 import pytest
 
-from app.api.schemas.conversation import ConversationCreateDTO as requestDTO
-from app.api.schemas.conversation import ConversationDTO as responseDTO
+from app.models.conversation import ConversationCreateDTO as requestDTO
+from app.models.conversation import ConversationDTO as responseDTO
 from app.services.conversation import (
     ConversationService,
 )  # Ajusta este import a tu ruta real

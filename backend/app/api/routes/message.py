@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends
 
-from app.api.schemas.message import (
+from app.models.message import (
     MessageCreateDTO,
     MessageCreateFullDTO,
     MessageDTO,
