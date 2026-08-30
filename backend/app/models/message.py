@@ -1,6 +1,7 @@
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, PlainSerializer
 from datetime import datetime, timezone as tz
 from enum import Enum
+from typing import Annotated
 
 
 class Role(str, Enum):
@@ -11,7 +12,9 @@ class Role(str, Enum):
 
 class MessageCreateDTO(BaseModel):
     content: str
-    created_at: datetime = Field(default_factory=lambda: datetime.now(tz.utc))
+    created_at: Annotated[
+        datetime, PlainSerializer(lambda x: x.isoformat(timespec="milliseconds"))
+    ] = Field(default_factory=lambda: datetime.now(tz.utc))
 
 
 class MessageCreateFullDTO(MessageCreateDTO):

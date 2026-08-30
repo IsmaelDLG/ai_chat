@@ -7,6 +7,7 @@ from fastapi.testclient import TestClient
 from app.api.routes.conversation import router
 from app.api.deps import get_conversation_service
 from app.models.conversation import ConversationCreateDTO, ConversationDTO
+from datetime import datetime, timezone as tz
 
 
 @pytest.fixture
@@ -39,10 +40,9 @@ def test_create_conversation(client, mock_conversation_service):
         return_value=expected_response
     )
 
-    payload = {
-        "title": "Test conversation"
-    }
+    payload = ConversationCreateDTO(title="Test conversation").model_dump()
 
+    print(type(payload), payload)
     # Act
     response = client.post(
         "/api/conversations",
@@ -51,7 +51,36 @@ def test_create_conversation(client, mock_conversation_service):
 
     # Assert
     assert response.status_code == 200
-    assert response.json()["id"] == 1
-    assert response.json()["title"] == "Test conversation"
+    assert response.json()["id"] == expected_response.id
+    assert response.json()["title"] == expected_response.title
 
     mock_conversation_service.create_conversation.assert_awaited_once()
+
+
+def test_get_all_conversations(client, mock_conversation_service):
+    # Arrange
+    expected_responses = [
+        ConversationDTO(
+            id=1, title="Test Conversation 1", created_at=datetime.now(tz.utc)
+        ),
+        ConversationDTO(
+            id=2, title="Test Conversation 2", created_at=datetime.now(tz.utc)
+        ),
+    ]
+
+    mock_conversation_service.get_all_conversations = AsyncMock(
+        return_value=expected_responses
+    )
+
+    # Act
+    response = client.get("/api/conversations")
+
+    # Assert
+    assert response.status_code == 200
+    assert len(response.json()) == 2
+    assert response.json()[0]["id"] == 1
+    assert response.json()[0]["title"] == "Test Conversation 1"
+    assert response.json()[1]["id"] == 2
+    assert response.json()[1]["title"] == "Test Conversation 2"
+
+    mock_conversation_service.get_all_conversations.assert_awaited_once()

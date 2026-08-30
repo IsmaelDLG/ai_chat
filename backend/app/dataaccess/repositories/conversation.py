@@ -7,7 +7,11 @@ from sqlalchemy import update, select
 
 class ConversationRepository(BaseRepository):
     async def save(self, dto: ConversationCreateDTO) -> ConversationDTO:
-        conversation = Conversations(**dto.model_dump())
+        conversation = Conversations(
+            title=dto.title,
+            created_at=dto.created_at,
+            updated_at=None,
+        )
 
         self.session.add(conversation)
         await self.session.commit()
@@ -32,8 +36,11 @@ class ConversationRepository(BaseRepository):
         return result
 
     async def update_updated_at(
-        self, conversation_id: int, updated_at: datetime = datetime.now(tz.utc)
+        self, conversation_id: int, updated_at: datetime | None = None
     ):
+        if updated_at is None:
+            updated_at = datetime.now(tz.utc)
+
         query = (
             update(Conversations)
             .where(Conversations.id == conversation_id)

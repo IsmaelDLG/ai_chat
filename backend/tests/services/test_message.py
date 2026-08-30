@@ -50,7 +50,10 @@ async def test_send_message_user_save_error():
     )
 
     conversation_dto = ConversationDTO(
-        id=1, title="test", created_at=datetime.now(tz.utc), updated_at=datetime.now(tz.utc)
+        id=1,
+        title="test",
+        created_at=datetime.now(tz.utc),
+        updated_at=datetime.now(tz.utc),
     )
 
     mock_message_repository = MagicMock()
@@ -86,7 +89,10 @@ async def test_send_message_llm_error():
     )
 
     conversation_dto = ConversationDTO(
-        id=1, title="test", created_at=datetime.now(tz.utc), updated_at=datetime.now(tz.utc)
+        id=1,
+        title="test",
+        created_at=datetime.now(tz.utc),
+        updated_at=datetime.now(tz.utc),
     )
 
     mock_message_repository = MagicMock()
@@ -128,7 +134,10 @@ async def test_send_message():
     )
 
     conversation_dto = ConversationDTO(
-        id=1, title="test", created_at=datetime.now(tz.utc), updated_at=datetime.now(tz.utc)
+        id=1,
+        title="test",
+        created_at=datetime.now(tz.utc),
+        updated_at=datetime.now(tz.utc),
     )
 
     assistant_dto_response = MessageDTO(
