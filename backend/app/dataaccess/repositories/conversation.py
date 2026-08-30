@@ -10,7 +10,7 @@ class ConversationRepository(BaseRepository):
         conversation = Conversations(
             title=dto.title,
             created_at=dto.created_at,
-            updated_at=None,
+            updated_at=dto.created_at,
         )
 
         self.session.add(conversation)
