@@ -17,7 +17,12 @@ class MessageRepository(BaseRepository):
         return [MessageDTO.model_validate(message) for message in messages]
 
     async def save(self, dto: MessageCreateFullDTO) -> MessageDTO:
-        message = Messages(**dto.model_dump())
+        message = Messages(
+            conversation_id=dto.conversation_id,
+            role=dto.role.value if hasattr(dto.role, "value") else dto.role,
+            content=dto.content,
+            created_at=dto.created_at,
+        )
 
         self.session.add(message)
         await self.session.commit()
