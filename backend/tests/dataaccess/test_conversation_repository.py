@@ -40,13 +40,13 @@ async def test_save_persists_conversation_in_database(session: AsyncSession):
     assert saved.id is not None
     assert saved.title == "Weekly sync"
     assert saved.created_at == now.replace(tzinfo=None)
-    assert saved.updated_at is None
+    assert saved.updated_at == now.replace(tzinfo=None)
 
     persisted = await session.get(Conversations, saved.id)
     assert persisted is not None
     assert persisted.title == "Weekly sync"
     assert persisted.created_at == now.replace(tzinfo=None)
-    assert persisted.updated_at is None
+    assert persisted.updated_at == now.replace(tzinfo=None)
 
 
 @pytest.mark.asyncio
