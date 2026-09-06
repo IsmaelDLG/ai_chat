@@ -103,7 +103,7 @@ async def test_send_message_llm_error():
     mock_conversation_repository.update_updated_at = AsyncMock()
 
     with patch("app.services.message.client") as mock_client:
-        mock_client.responses.create = AsyncMock(side_effect=Exception("LLM Error"))
+        mock_client.chat.completions.create = AsyncMock(side_effect=Exception("LLM Error"))
 
         service = MessageService(mock_message_repository, mock_conversation_repository)
 
@@ -115,7 +115,7 @@ async def test_send_message_llm_error():
             dto_input.conversation_id
         )
         mock_message_repository.save.assert_awaited_once_with(dto_input)
-        mock_client.responses.create.assert_awaited_once_with(
+        mock_client.chat.completions.create.assert_awaited_once_with(
             model=settings.llm_model,
             input=dto_input.content,
         )
@@ -159,7 +159,7 @@ async def test_send_message():
     mock_ai_client.output_text = "Bien, y tú?"
 
     with patch("app.services.message.client") as mock_client:
-        mock_client.responses.create = AsyncMock(return_value=mock_ai_client)
+        mock_client.chat.completions.create = AsyncMock(return_value=mock_ai_client)
 
         service = MessageService(mock_message_repository, mock_conversation_repository)
 
@@ -171,7 +171,7 @@ async def test_send_message():
             dto_input.conversation_id
         )
 
-        mock_client.responses.create.assert_awaited_once_with(
+        mock_client.chat.completions.create.assert_awaited_once_with(
             model=settings.llm_model,
             input=dto_input.content,
         )

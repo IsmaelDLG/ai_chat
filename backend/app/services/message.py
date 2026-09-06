@@ -8,7 +8,7 @@ from app.core.exceptions import (
     LLMNotAvailableError,
 )
 
-from app.models.message import MessageCreateFullDTO, MessageDTO, Role
+from app.models.message import ChatCompletionMessage, MessageCreateFullDTO, MessageDTO, Role
 from app.dataaccess.repositories.conversation import ConversationRepository
 from app.dataaccess.repositories.message import MessageRepository
 from app.models.conversation import ConversationDTO
@@ -43,30 +43,31 @@ class MessageService:
         if not conversation:
             raise ConversationNotFoundError(conversation_id)
 
-        llm_task = asyncio.create_task(
-            client.responses.create(
-                model=settings.llm_model,
-                input=message.content,
-            )
-        )
-
         try:
             await self.repository.save(message)
         except Exception:
-            if not llm_task.done():
-                llm_task.cancel()
             raise MessageSaveError(message.content)
 
+        conversation_messages = await self.repository.get_by_conversation_id(conversation_id)
+        messages_parsed = [ChatCompletionMessage.model_validate(message.model_dump()) for message in conversation_messages]
+        json = [message.model_dump() for message in messages_parsed]
+        
         try:
-            response = await llm_task
+            response = await client.chat.completions.create(
+                model=settings.llm_model,
+                messages=json,
+            )
         except Exception:
             raise LLMNotAvailableError()
+
+        response_str = response.choices[0].message.content
 
         assistant_message = MessageCreateFullDTO(
             conversation_id=message.conversation_id,
             role=Role.ASSISTANT,
-            content=response.output_text,
+            content=response_str,
         )
+
         try:
             result: MessageDTO = await self.repository.save(assistant_message)
         except Exception:
