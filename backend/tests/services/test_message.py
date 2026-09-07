@@ -62,7 +62,6 @@ async def test_send_message_user_save_error():
 
     mock_conversation_repository = MagicMock()
     mock_conversation_repository.get_by_id = AsyncMock(return_value=conversation_dto)
-    mock_conversation_repository.update_updated_at = AsyncMock()
 
     service = MessageService(mock_message_repository, mock_conversation_repository)
 
@@ -88,6 +87,14 @@ async def test_send_message_llm_error():
         content="Hola, ¿cómo estás?",
     )
 
+    dto_output = MessageDTO(
+        id=1,
+        conversation_id=1,
+        role=Role.USER,
+        content="Hola, ¿cómo estás?",
+        created_at=datetime.now(tz.utc),
+    )
+
     conversation_dto = ConversationDTO(
         id=1,
         title="test",
@@ -97,6 +104,7 @@ async def test_send_message_llm_error():
 
     mock_message_repository = MagicMock()
     mock_message_repository.save = AsyncMock()
+    mock_message_repository.get_by_conversation_id = AsyncMock(return_value=[dto_output])
 
     mock_conversation_repository = MagicMock()
     mock_conversation_repository.get_by_id = AsyncMock(return_value=conversation_dto)
@@ -115,9 +123,10 @@ async def test_send_message_llm_error():
             dto_input.conversation_id
         )
         mock_message_repository.save.assert_awaited_once_with(dto_input)
+        json = [{"role": dto_output.role, "content": dto_output.content}]
         mock_client.chat.completions.create.assert_awaited_once_with(
             model=settings.llm_model,
-            input=dto_input.content,
+            messages=json,
         )
         mock_conversation_repository.update_updated_at.assert_not_awaited()
 
@@ -131,6 +140,14 @@ async def test_send_message():
         conversation_id=1,
         role=Role.USER,
         content="Hola, ¿cómo estás?",
+    )
+
+    dto_output = MessageDTO(
+        id=1,
+        conversation_id=1,
+        role=Role.USER,
+        content="Hola, ¿cómo estás?",
+        created_at=datetime.now(tz.utc),
     )
 
     conversation_dto = ConversationDTO(
@@ -149,14 +166,15 @@ async def test_send_message():
     )
 
     mock_message_repository = MagicMock()
-    mock_message_repository.save = AsyncMock(return_value=assistant_dto_response)
+    mock_message_repository.save = AsyncMock(side_effect=[dto_output, assistant_dto_response])
+    mock_message_repository.get_by_conversation_id = AsyncMock(return_value=[dto_output])
 
     mock_conversation_repository = MagicMock()
     mock_conversation_repository.get_by_id = AsyncMock(return_value=conversation_dto)
     mock_conversation_repository.update_updated_at = AsyncMock()
 
     mock_ai_client = MagicMock()
-    mock_ai_client.output_text = "Bien, y tú?"
+    mock_ai_client.choices[0].message.content = "Bien, y tú?"
 
     with patch("app.services.message.client") as mock_client:
         mock_client.chat.completions.create = AsyncMock(return_value=mock_ai_client)
@@ -171,9 +189,12 @@ async def test_send_message():
             dto_input.conversation_id
         )
 
+        assert mock_message_repository.save.call_count == 2
+
+        json = [{"role": dto_output.role, "content": dto_output.content}]
         mock_client.chat.completions.create.assert_awaited_once_with(
             model=settings.llm_model,
-            input=dto_input.content,
+            messages=json,
         )
 
         mock_conversation_repository.update_updated_at.assert_awaited_once_with(
