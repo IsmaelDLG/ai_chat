@@ -236,10 +236,10 @@ añadir persistencia del contexto de conversación.
 - [x] Crear migraciones
 - [x] Guardar mensajes de usuario
 - [x] Guardar respuestas del asistente
-- [ ] Recuperar historial
-- [ ] Enviar historial relevante al LLM
-- [ ] Endpoint para recuperar una conversación
-- [ ] Endpoint para crear/nueva conversación
+- [x] Recuperar historial
+- [x] Enviar historial relevante al LLM
+- [x] Endpoint para recuperar una conversación
+- [x] Endpoint para crear/nueva conversación
 
 Modelo inicial previsto:
 
@@ -293,7 +293,15 @@ Frontend
 
 ---
 
-# Milestone 7 — Web Search
+# Milestone 7 - Frontend básico
+
+Objetivo: tener una pequeña interfaz simple para usar la API.
+
+# Milestone 8 - Montar docker compose
+
+Objetivo: Poder arrancar todo el proyecto dockerizado.
+
+# Milestone 9 — Web Search
 
 Objetivo: permitir que el modelo consulte Internet cuando necesite información actual.
 
