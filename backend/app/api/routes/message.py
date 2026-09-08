@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends
+from fastapi.responses import StreamingResponse
 
 from app.models.message import (
     MessageCreateDTO,
@@ -36,3 +37,17 @@ async def create(
     response: MessageDTO = await service.send_message(fullDTO)
 
     return response
+
+@router.post("/sse", response_model=MessageDTO)
+async def create_stream(
+    conversation_id: int,
+    dto: MessageCreateDTO,
+    service: MessageService = Depends(get_message_service),
+):
+    fullDTO = MessageCreateFullDTO(
+        **dto.model_dump(), conversation_id=conversation_id, role=Role.USER
+    )
+    return StreamingResponse(
+        service.send_message_stream(fullDTO),
+        media_type="application/x-ndjson"
+    )

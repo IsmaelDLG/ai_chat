@@ -1,3 +1,5 @@
+import json
+from types import SimpleNamespace
 from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 from datetime import datetime, timezone as tz
@@ -314,6 +316,87 @@ async def test_get_messages_conversation_not_found():
 
     mock_conversation_repository.get_by_id.assert_awaited_once_with(conversation_id)
 
+@pytest.mark.asyncio
+async def test_send_message_stream():
+    # 1. Arrange
+    dto_input = MessageCreateFullDTO(
+        conversation_id=1,
+        role=Role.USER,
+        content="Hola, ¿cómo estás?",
+    )
+
+    dto_output = MessageDTO(
+        id=1,
+        conversation_id=1,
+        role=Role.USER,
+        content="Hola, ¿cómo estás?",
+        created_at=datetime.now(tz.utc),
+    )
+
+    conversation_dto = ConversationDTO(
+        id=1,
+        title="test",
+        created_at=datetime.now(tz.utc),
+        updated_at=datetime.now(tz.utc),
+    )
+
+    assistant_dto_response = MessageDTO(
+        id=2,
+        conversation_id=1,
+        role=Role.ASSISTANT,
+        content="Hola mundo",
+        created_at=datetime.now(tz.utc),
+    )
+
+    mock_message_repository = MagicMock()
+    mock_message_repository.save = AsyncMock(
+        side_effect=[dto_output, assistant_dto_response]
+    )
+    mock_message_repository.get_by_conversation_id = AsyncMock(
+        return_value=[dto_output]
+    )
+
+    mock_conversation_repository = MagicMock()
+    mock_conversation_repository.get_by_id = AsyncMock(return_value=conversation_dto)
+    mock_conversation_repository.update_updated_at = AsyncMock()
+
+    async def mock_openai_stream(*args, **kwargs):
+        chunks_text = ["Hola", " ", "mundo"]
+        for text in chunks_text:
+            yield SimpleNamespace(
+                choices=[
+                    SimpleNamespace(
+                        delta=SimpleNamespace(content=text)
+                    )
+                ]
+            )
+
+    with patch("app.services.message.client") as mock_client:
+        mock_client.chat.completions.create = AsyncMock(return_value=mock_openai_stream())
+
+        service = MessageService(mock_message_repository, mock_conversation_repository)
+
+        # 2. Act
+        chunks = [chunk async for chunk in service.send_message_stream(dto_input)]
+
+        # 3. Assert - Contenido del Stream
+        assert len(chunks) == 4  # 3 deltas + 1 mensaje final guardado
+
+        first_chunk = json.loads(chunks[0])
+        assert first_chunk["role"] == Role.ASSISTANT
+        assert first_chunk["content"] == "Hola"
+
+        last_chunk = json.loads(chunks[-1])
+        assert last_chunk["role"] == Role.ASSISTANT
+        assert last_chunk["content"] == "Hola mundo"
+        assert last_chunk["id"] == assistant_dto_response.id
+
+        # 4. Assert - Efectos secundarios (Base de Datos y llamadas externas)
+        mock_client.chat.completions.create.assert_called_once()
+        assert mock_client.chat.completions.create.call_args.kwargs.get("stream") is True
+
+        assert mock_message_repository.save.call_count == 2
+        mock_conversation_repository.update_updated_at.assert_awaited_once_with(conversation_dto.id)
 
 @pytest.mark.asyncio
 async def test_get_messages():

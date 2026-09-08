@@ -23,7 +23,7 @@ class MessageCreateFullDTO(MessageCreateDTO):
 
 
 class MessageDTO(BaseModel):
-    id: int
+    id: int | None = None
     conversation_id: int
     role: Role
     content: str
