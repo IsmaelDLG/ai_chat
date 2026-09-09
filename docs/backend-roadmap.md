@@ -269,13 +269,13 @@ Objetivo: que la respuesta aparezca progresivamente en lugar de esperar a que el
 
 ## Pendiente
 
-- [ ] Comprobar streaming del modelo Ollama
-- [ ] Implementar streaming en el cliente LLM
-- [ ] Propagar streaming desde `ChatService`
-- [ ] Crear respuesta streaming en FastAPI
-- [ ] Manejar errores durante streaming
-- [ ] Añadir tests
-- [ ] Preparar contrato para que React pueda consumir el stream
+- [x] Comprobar streaming del modelo Ollama
+- [X] Implementar streaming en el cliente LLM
+- [x] Propagar streaming desde `ChatService`
+- [x] Crear respuesta streaming en FastAPI
+- [x] Manejar errores durante streaming
+- [x] Añadir tests
+- [x] Preparar contrato para que React pueda consumir el stream
 
 Flujo:
 
