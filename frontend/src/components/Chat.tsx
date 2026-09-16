@@ -1,6 +1,13 @@
+interface ChatProps {
+  conversation: Conversation
+  
+}
+
 function Chat() {
     return (
       <main className="bg-green-400 flex-3">
+        
+          
         
       </main>
     )

@@ -1,10 +1,10 @@
 import Chat from './Chat'
-import Sidebar from './Sidebar'
+import SideNav from './Sidebar/Sidebar'
 
 function Layout() {
   return (
     <>
-      <Sidebar />
+      <SideNav />
       <Chat />
     </>
   )

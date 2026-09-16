@@ -19,8 +19,8 @@ async function createConversation(title: string): Promise<Conversation> {
     return {
         id: 3,
         title,
-        created_at: new Date(),
-        updated_at: new Date(),
+        createdAt: new Date(),
+        updatedAt: new Date(),
     };
 }
 
@@ -28,20 +28,17 @@ async function getConversations(): Promise<Conversation[]> {
     // TODO: Call GET /conversations
     await delay(500);
 
-    return [
-        {
-            id: 1,
-            title: 'Primera conversación',
-            created_at: new Date(),
-            updated_at: new Date(),
-        },
-        {
-            id: 2,
-            title: 'Segunda conversación',
-            created_at: new Date(),
-            updated_at: new Date(),
-        },
-    ];
+    const result = []
+    for(let i = 0; i<100; i++) {
+        result.push({
+            id: i,
+            title: `Conversation title ${i}`,
+            createdAt: new Date(),
+            updatedAt: new Date()
+        })
+    }
+    
+    return result
 }
 
 const useStore = create<ConversationStore>((set) => ({
