@@ -30,7 +30,7 @@ const Chat: React.FC<ChatProps> = ({}) => {
   }
 
   return (
-    <main className="bg-green-400 flex-3 relative p-4">
+    <main className="flex-3 relative pt-10 pb-30">
       <MessagesList messages={messages} />
       <MessageInput handleSend={handleSendMessage} />
     </main>

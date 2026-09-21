@@ -4,8 +4,9 @@ import type { Conversation } from '../types';
 interface ConversationStore {
     current: number | null;
     conversations: Conversation[];
-    add: (title: string) => Promise<void>;
     getAll: () => Promise<void>;
+    add: (title: string) => Promise<void>;
+    set: (conversationId: number | null) => void;
 }
 
 function delay(ms: number): Promise<void> {
@@ -44,7 +45,13 @@ async function getConversations(): Promise<Conversation[]> {
 const useStore = create<ConversationStore>((set) => ({
     current: null,
     conversations: [],
+    getAll: async () => {
+        const conversations = await getConversations();
 
+        set({
+            conversations,
+        });
+    },
     add: async (title: string) => {
         const conversation = await createConversation(title);
 
@@ -55,14 +62,9 @@ const useStore = create<ConversationStore>((set) => ({
             ],
         }));
     },
-
-    getAll: async () => {
-        const conversations = await getConversations();
-
-        set({
-            conversations,
-        });
-    },
+    set: (conversationId: number | null) => {
+        set(() => ({ current: conversationId }));
+    }
 }));
 
 export default useStore;

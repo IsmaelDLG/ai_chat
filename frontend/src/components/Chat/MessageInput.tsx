@@ -11,7 +11,6 @@ const MessageInput: React.FC<MessageInputProps> = ({ handleSend }) => {
         const trimmed = message.trim()
         if (!trimmed) return;
 
-        // enviar mensaje
         handleSend(trimmed)
 
         setMessage('');
@@ -85,7 +84,3 @@ const MessageInput: React.FC<MessageInputProps> = ({ handleSend }) => {
     );
 }
 export default MessageInput
-
-function handleSend(trimmed: string) {
-    throw new Error("Function not implemented.");
-}

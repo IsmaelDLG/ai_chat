@@ -1,7 +1,6 @@
 import { useEffect } from 'react'
 import useConversationsStore from "../../state/conversationsStore"
 import { ConversationItem } from './ConversationItem'
-import type { Conversation } from '../../types'
 
 interface ConversationListProps {
 
@@ -9,14 +8,15 @@ interface ConversationListProps {
 
 const ConversationList: React.FC<ConversationListProps> = () => {
     const getAllConversations = useConversationsStore((state) => state.getAll)
+    const setCurrentConversation = useConversationsStore((state) => state.set)
     const conversations = useConversationsStore((state) => state.conversations)
 
     useEffect(() => {
         getAllConversations()
     }, [])
 
-    const handleOnSelectConversation = (conversation: Conversation) => {
-        console.log(`Handle on click conversation id: ${conversation.id}`)
+    const handleOnSelectConversation = (id: number) => {
+        setCurrentConversation(id)
     }
 
     return (

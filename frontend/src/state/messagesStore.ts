@@ -24,6 +24,7 @@ async function getMessagesByConversationId(conversationId: number): Promise<Mess
     // TODO: Call get messages from the database
     await delay(500)
     const result = []
+    
     for (let i = 0; i<100; i++) {
         let isUser = i % 2 === 0
         let role: Role, content
@@ -34,12 +35,16 @@ async function getMessagesByConversationId(conversationId: number): Promise<Mess
             role = 'assistant'
             content = `Assistant response ${i}`
         }
+
+        let createdAt = new Date()
+        createdAt.setHours(new Date().getHours() - (100-i))
+
         let message: Message = {
             id: i,
             conversationId,
             role,
             content,
-            createdAt: new Date()
+            createdAt
         }
         result.push(message);
     }
