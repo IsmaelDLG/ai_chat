@@ -1,15 +1,18 @@
 import { useState } from "react";
 
-interface MessageInputProps { }
+interface MessageInputProps { 
+    handleSend: (message: string) => void;
+}
 
-const MessageInput: React.FC<MessageInputProps> = () => {
+const MessageInput: React.FC<MessageInputProps> = ({ handleSend }) => {
     const [message, setMessage] = useState('');
 
     const handleSubmit = () => {
-        if (!message.trim()) return;
+        const trimmed = message.trim()
+        if (!trimmed) return;
 
         // enviar mensaje
-        console.log(message);
+        handleSend(trimmed)
 
         setMessage('');
     };
@@ -82,3 +85,7 @@ const MessageInput: React.FC<MessageInputProps> = () => {
     );
 }
 export default MessageInput
+
+function handleSend(trimmed: string) {
+    throw new Error("Function not implemented.");
+}
