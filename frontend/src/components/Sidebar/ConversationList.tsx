@@ -13,7 +13,7 @@ const ConversationList: React.FC<ConversationListProps> = () => {
 
     useEffect(() => {
         getAllConversations()
-    }, [])
+    }, [getAllConversations])
 
     const handleOnSelectConversation = (id: number) => {
         setCurrentConversation(id)
@@ -22,8 +22,8 @@ const ConversationList: React.FC<ConversationListProps> = () => {
     return (
         <div id="history" className="mx-4 mt-4">
             {
-                conversations.map((conversation, index) => (
-                    <ConversationItem key={index} conversation={conversation} onSelect={handleOnSelectConversation} />
+                conversations.map((conversation) => (
+                    <ConversationItem key={conversation?.id} conversation={conversation} onSelect={handleOnSelectConversation} />
                 ))
             }
         </div>

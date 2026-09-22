@@ -7,11 +7,11 @@ interface HeaderProps {
 
 const ChatHeader: React.FC<HeaderProps> = ({ conversation, onClose }) => {
   return (
-    <header className="absolute top-0 left-0 left-0 z-10 w-full ">
+    <header className="absolute top-0 left-0 z-10 w-full ">
       <div className="w-9/10 mx-auto pt-5 pb-2 bg-white flex flex-row justify-between">
         {conversation?.id && (
           <>
-            <h2 className="text-xl font-bold text-gray">
+            <h2 className="text-xl font-bold text-gray-900">
               {conversation?.title}
             </h2>
             <button className="text-xl" onClick={onClose}>

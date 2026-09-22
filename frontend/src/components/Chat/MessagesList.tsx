@@ -7,20 +7,26 @@ interface MessagesListProps {
 }
 
 const MessagesList: React.FC<MessagesListProps> = ({ messages }) => {
-const messagesEndRef = useRef<HTMLLIElement>(null)
+  const messagesEndRef = useRef<HTMLLIElement>(null);
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({
       behavior: "smooth",
     });
   }, [messages]);
   return (
-    <div className="size-full overflow-y-auto scrollbar-none w-9/10 mx-auto py-20" >
-        <ul className="flex-col">
-        {messages.map((message, index) => (
-            <MessageItem key={index} message={message} />
+    <div className="size-full overflow-y-auto scrollbar-none w-9/10 mx-auto py-20">
+      <ul className="flex-col">
+        {messages.map((message) => (
+          <MessageItem
+            key={
+              message.id ??
+              `${message.conversationId}-${message.createdAt.getTime()}`
+            }
+            message={message}
+          />
         ))}
         <li ref={messagesEndRef}></li>
-        </ul>
+      </ul>
     </div>
   );
 };

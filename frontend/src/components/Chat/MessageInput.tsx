@@ -11,27 +11,29 @@ const MessageInput: React.FC<MessageInputProps> = ({
 }) => {
   const [input, setInput] = useState("");
 
-  const handleSubmit = () => {
+  const send = () => {
     const trimmed = input.trim();
     if (!trimmed) return;
 
     handleSend(trimmed);
-
     setInput("");
   };
 
+  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    send();
+  };
+
   const handleKeyDown = (event: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    console.log(event);
     if (event.key === "Enter" && !event.shiftKey) {
       event.preventDefault();
-      handleSubmit();
+      send();
     }
   };
+  
   return (
     <div className="absolute bottom-0 right-0 w-full z-10">
-      <div className="py-5 bg-gradient-to-b from-transparent to-white">
-
-      </div>
+      <div className="py-5 bg-gradient-to-b from-transparent to-white"></div>
       <form
         onSubmit={handleSubmit}
         className="flex gap-2 pb-4 w-9/10 mx-auto bg-white"

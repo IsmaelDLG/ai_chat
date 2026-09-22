@@ -54,8 +54,8 @@ async function getMessagesByConversationId(conversationId: number): Promise<Mess
 interface MessageStore {
     messages: Message[];
     clear: () => void;
-    send: (conversationId: number, content: string) => Promise<void> | null;
-    getByConversationId: (conversationId: number) => Promise<void> | null;
+    send: (conversationId: number, content: string) => Promise<void>;
+    getByConversationId: (conversationId: number) => Promise<void>;
 }
 
 const useStore = create<MessageStore>((set) => ({
