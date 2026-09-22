@@ -11,6 +11,8 @@ interface ChatProps {
 
 const Chat: React.FC<ChatProps> = ({}) => {
   const conversation = useConversationStore((state) => state.current)
+  const setConversation = useConversationStore((state) => state.set)
+  const clearMessages = useMessageStore((state) =>  state.clear)
   const sendMessage = useMessageStore((state) =>  state.send)
   const getMessages = useMessageStore((state) => state.getByConversationId)
 
@@ -19,6 +21,8 @@ const Chat: React.FC<ChatProps> = ({}) => {
   useEffect(() => {
     if (!!conversation?.id) {
       getMessages(conversation?.id)
+    } else {
+      clearMessages()
     }
   }, [conversation, getMessages])
 
@@ -30,9 +34,13 @@ const Chat: React.FC<ChatProps> = ({}) => {
     }
   }
 
+  const handleCloseConversation = () => {
+    setConversation(null)
+  }
+
   return (
     <main className="flex-3 relative">
-      <ChatHeader conversation={conversation} />
+      <ChatHeader conversation={conversation} onClose={handleCloseConversation}/>
       <MessagesList messages={messages} />
       <MessageInput handleSend={handleSendMessage} isLoading={false} />
     </main>
