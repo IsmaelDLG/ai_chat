@@ -14,7 +14,7 @@ const messagesEndRef = useRef<HTMLLIElement>(null)
     });
   }, [messages]);
   return (
-    <div className="size-full overflow-y-auto scrollbar-none w-9/10 mx-auto" >
+    <div className="size-full overflow-y-auto scrollbar-none w-9/10 mx-auto py-20" >
         <ul className="flex-col">
         {messages.map((message, index) => (
             <MessageItem key={index} message={message} />

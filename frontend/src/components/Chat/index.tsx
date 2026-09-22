@@ -4,35 +4,37 @@ import MessagesList from "./MessagesList"
 import useConversationStore from "../../state/conversationsStore"
 import useMessageStore from "../../state/messagesStore"
 import { useEffect } from "react"
+import ChatHeader from "./Header"
 
 interface ChatProps {
 }
 
 const Chat: React.FC<ChatProps> = ({}) => {
-  const conversationId = useConversationStore((state) => state.current)
+  const conversation = useConversationStore((state) => state.current)
   const sendMessage = useMessageStore((state) =>  state.send)
   const getMessages = useMessageStore((state) => state.getByConversationId)
 
   const messages = useMessageStore((state) => state.messages)
 
   useEffect(() => {
-    if (!!conversationId) {
-      getMessages(conversationId)
+    if (!!conversation?.id) {
+      getMessages(conversation?.id)
     }
-  }, [conversationId, getMessages])
+  }, [conversation, getMessages])
 
   const handleSendMessage = (message: string) => {
-    if (!conversationId) {
+    if (!conversation?.id) {
       console.log("Conversation ID is not defined")
     } else {
-      sendMessage(conversationId, message)
+      sendMessage(conversation?.id, message)
     }
   }
 
   return (
-    <main className="flex-3 relative pt-10 pb-30">
+    <main className="flex-3 relative">
+      <ChatHeader conversation={conversation} />
       <MessagesList messages={messages} />
-      <MessageInput handleSend={handleSendMessage} />
+      <MessageInput handleSend={handleSendMessage} isLoading={false} />
     </main>
   )
 }

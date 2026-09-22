@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import type { Conversation } from '../types';
 
 interface ConversationStore {
-    current: number | null;
+    current: Conversation | null;
     conversations: Conversation[];
     getAll: () => Promise<void>;
     add: (title: string) => Promise<void>;
@@ -63,7 +63,15 @@ const useStore = create<ConversationStore>((set) => ({
         }));
     },
     set: (conversationId: number | null) => {
-        set(() => ({ current: conversationId }));
+        set((state) => {
+            const conversation = state.conversations.find(
+                ({ id }) => id === conversationId,
+            );
+
+            return {
+                current: conversation,
+            };
+        });
     }
 }));
 

@@ -79,7 +79,7 @@ const useStore = create<MessageStore>((set) => ({
     },
     getByConversationId: async (conversationId: number) => {
         const response = await getMessagesByConversationId(conversationId);
-        set((state) => ({
+        set(() => ({
             messages: [...response]
         }))
     }
