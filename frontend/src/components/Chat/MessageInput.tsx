@@ -2,18 +2,19 @@ import { useState } from "react";
 
 interface MessageInputProps { 
     handleSend: (message: string) => void;
+    isLoading: boolean;
 }
 
-const MessageInput: React.FC<MessageInputProps> = ({ handleSend }) => {
-    const [message, setMessage] = useState('');
+const MessageInput: React.FC<MessageInputProps> = ({ handleSend, isLoading }) => {
+    const [input, setInput] = useState('');
 
     const handleSubmit = () => {
-        const trimmed = message.trim()
+        const trimmed = input.trim()
         if (!trimmed) return;
 
         handleSend(trimmed)
 
-        setMessage('');
+        setInput('');
     };
 
     const handleKeyDown = (event: React.KeyboardEvent<HTMLTextAreaElement>) => {
@@ -23,64 +24,25 @@ const MessageInput: React.FC<MessageInputProps> = ({ handleSend }) => {
             handleSubmit();
         }
     };
-    return (
-        <div className="pointer-events-none absolute bottom-5 left-0 flex w-full justify-center">
-            <div
-                className="
-                    pointer-events-auto
-                    flex w-[min(768px,calc(100%-32px))]
-                    items-end gap-2
-                    rounded-3xl
-                    border border-gray-300
-                    bg-white
-                    p-2
-                    shadow-sm
-                "
-            >
-                <button
-                    type="button"
-                    className="
-                        flex h-10 w-10 shrink-0
-                        items-center justify-center
-                        rounded-full
-                        hover:bg-gray-100
-                    "
-                >
-                    +
-                </button>
-
-                <textarea
-                    placeholder="Pregunta lo que quieras"
-                    rows={1}
-                    className="
-                        max-h-32
-                        min-h-10
-                        flex-1
-                        resize-none
-                        bg-transparent
-                        px-2 py-2
-                        outline-none
-                    "
-                    onChange={event => setMessage(event.target.value)}
-                    onKeyDown={handleKeyDown}
-                    value={message}
-                />
-
-                <button
-                    type="button"
-                    className="
-                        flex h-10 w-10 shrink-0
-                        items-center justify-center
-                        rounded-full
-                        bg-black text-white
-                        hover:bg-gray-800
-                    "
-                    onClick={handleSubmit}
-                >
-                    ↑
-                </button>
-            </div>
-        </div>
-    );
+      return (
+    <form onSubmit={handleSubmit} className="flex gap-2 p-4 border-t border-gray-700 ">
+      <textarea
+        rows={1}
+        value={input}
+        onChange={event => setInput(event.target.value)}
+        onKeyDown={handleKeyDown}
+        placeholder="Escribe tu mensaje..."
+        disabled={isLoading}
+        className="flex-1 p-2 border border-gray-700 rounded-md placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+      />
+      <button
+        type="submit"
+        disabled={isLoading}
+        className="px-4 py-2 bg-blue-600 text-white rounded-md font-medium hover:bg-blue-500 disabled:opacity-50 transition-colors"
+      >
+        {isLoading ? 'Enviando...' : 'Enviar'}
+      </button>
+    </form>
+  );
 }
 export default MessageInput

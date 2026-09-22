@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react";
 import type { Message } from "../../types";
-import MessageBox from "./MessageBox";
+import MessageItem from "./MessageItem";
 
 interface MessagesListProps {
   messages: Message[];
@@ -14,10 +14,10 @@ const messagesEndRef = useRef<HTMLLIElement>(null)
     });
   }, [messages]);
   return (
-    <div className="size-full overflow-y-auto scrollbar-none w-8/10 mx-auto" >
+    <div className="size-full overflow-y-auto scrollbar-none w-9/10 mx-auto" >
         <ul className="flex-col">
         {messages.map((message, index) => (
-            <MessageBox key={index} message={message} />
+            <MessageItem key={index} message={message} />
         ))}
         <li ref={messagesEndRef}></li>
         </ul>
