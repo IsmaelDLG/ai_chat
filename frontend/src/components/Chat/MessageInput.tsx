@@ -32,7 +32,7 @@ const MessageInput: React.FC<MessageInputProps> = ({
   };
   
   return (
-    <div className="absolute bottom-0 right-0 w-full z-10">
+    <div className="flex w-full">
       <div className="py-5 bg-gradient-to-b from-transparent to-white"></div>
       <form
         onSubmit={handleSubmit}

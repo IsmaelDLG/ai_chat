@@ -14,7 +14,7 @@ const MessagesList: React.FC<MessagesListProps> = ({ messages }) => {
     });
   }, [messages]);
   return (
-    <div className="size-full overflow-y-auto scrollbar-none w-9/10 mx-auto py-20">
+    <div id="messagesList" className="flex flex-grow w-full overflow-y-auto scrollbar-none w-9/10 mx-auto py-20">
       <ul className="flex-col">
         {messages.map((message) => (
           <MessageItem

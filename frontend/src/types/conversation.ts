@@ -4,3 +4,7 @@ export interface Conversation {
     createdAt: Date
     updatedAt: Date
 }
+
+export interface ConversationCreate {
+    title: string
+}

@@ -5,12 +5,15 @@ import useConversationStore from "../../state/conversationsStore";
 import useMessageStore from "../../state/messagesStore";
 import { useEffect } from "react";
 import ChatHeader from "./Header";
+import StartConversation from "./StartConversation";
 
 interface ChatProps {}
 
 const Chat: React.FC<ChatProps> = ({}) => {
   const conversation = useConversationStore((state) => state.current);
-  const setConversation = useConversationStore((state) => state.set);
+  const clearConversation = useConversationStore((state) => state.set);
+  const createConversation = useConversationStore((state) => state.add);
+
   const clearMessages = useMessageStore((state) => state.clear);
   const sendMessage = useMessageStore((state) => state.send);
   const getMessages = useMessageStore((state) => state.getByConversationId);
@@ -35,17 +38,27 @@ const Chat: React.FC<ChatProps> = ({}) => {
   };
 
   const handleCloseConversation = () => {
-    setConversation(null);
+    clearConversation();
   };
 
+  const handleCreateConversation = () => {
+    createConversation(`New conversation ${new Date().getTime()}`);
+  }
+
+
   return (
-    <main className="relative min-w-0 flex-3">
+    <main className="flex flex-col min-w-0 w-full ">
+      {conversation?.id && <>
       <ChatHeader
         conversation={conversation}
         onClose={handleCloseConversation}
       />
       <MessagesList messages={messages} />
       <MessageInput handleSend={handleSendMessage} isLoading={false} />
+      </>}
+      {!conversation?.id && 
+        <StartConversation onSubmit={handleCreateConversation} />
+      }
     </main>
   );
 };
