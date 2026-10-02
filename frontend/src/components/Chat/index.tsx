@@ -7,9 +7,8 @@ import { useEffect } from "react";
 import ChatHeader from "./Header";
 import StartConversation from "./StartConversation";
 
-interface ChatProps {}
 
-const Chat: React.FC<ChatProps> = ({}) => {
+function Chat() {
   const conversation = useConversationStore((state) => state.current);
   const clearConversation = useConversationStore((state) => state.set);
   const createConversation = useConversationStore((state) => state.add);

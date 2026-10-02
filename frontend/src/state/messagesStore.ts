@@ -1,24 +1,10 @@
 import { create } from "zustand";
 import type { Message } from "../types";
-import { getMessages } from "../api/messages";
-
-function delay(ms: number): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}
-
-async function sendMessage(message: Message): Promise<Message> {
-  // TODO: Call send message to the database
-  await delay(500);
-  const response: Message = {
-    id: new Date().getTime(),
-    conversationId: message.conversationId,
-    role: "assistant",
-    content: `"${message.content}" responsed by AI."`,
-    createdAt: new Date(),
-  };
-
-  return response;
-}
+import {
+  generateMessageResponse,
+  getMessages,
+  saveMessage,
+} from "../api/messages";
 
 interface MessageStore {
   messages: Message[];
@@ -33,18 +19,31 @@ const useStore = create<MessageStore>((set) => ({
     set(() => ({ messages: [] }));
   },
   send: async (conversationId: number, content: string) => {
-    const id = new Date().getTime();
-    const newMessage: Message = {
-      id,
-      conversationId,
-      role: "user",
-      content,
-      createdAt: new Date(),
-    };
-    const response = await sendMessage(newMessage);
+    let newMessage: Message;
+    try {
+      newMessage = await saveMessage(conversationId, content);
+    } catch (error) {
+      console.error("Error al guardar el mensaje:", error);
+      return;
+    }
+
     set((state) => ({
-      messages: [...state.messages, newMessage, response],
+      messages: [...state.messages, newMessage],
     }));
+
+    if (newMessage.id === null) {
+      console.error("The saved message response did not include a message ID.");
+      return;
+    }
+
+    try {
+      const response = await generateMessageResponse(newMessage.id);
+      set((state) => ({
+        messages: [...state.messages, response],
+      }));
+    } catch (error) {
+      console.error("Error al generar la respuesta:", error);
+    }
   },
   getByConversationId: async (conversationId: number) => {
     const messages = await getMessages(conversationId);

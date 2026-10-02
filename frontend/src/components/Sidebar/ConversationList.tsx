@@ -2,11 +2,9 @@ import { useEffect } from 'react'
 import useConversationsStore from "../../state/conversationsStore"
 import { ConversationItem } from './ConversationItem'
 
-interface ConversationListProps {
 
-}
 
-const ConversationList: React.FC<ConversationListProps> = () => {
+function ConversationList() {
     const getAllConversations = useConversationsStore((state) => state.getAll)
     const setCurrentConversation = useConversationsStore((state) => state.set)
     const conversations = useConversationsStore((state) => state.conversations)

@@ -1,32 +1,83 @@
 import type { Message, MessageResponse } from "../types";
 import { api } from "./client";
 
-const messageAdapter = (data: MessageResponse): Message => {
+type StreamMessageResponse = Omit<MessageResponse, "id"> & { id: number | null };
+
+const messageAdapter = (data: StreamMessageResponse): Message => {
   const result: Message = {
     id: data.id,
-    conversationId: data.conversationId,
+    conversationId: data.conversation_id,
     role: data.role,
     content: data.content,
-    createdAt: new Date(data.createdAt),
-  }
-  return result
-}
+    createdAt: new Date(data.created_at),
+  };
+  return result;
+};
 
-const streamMessage = async (conversationId: number, dto: Message) => {
-  
-  const response = await fetch(`http://localhost:8000/api/conversations/${conversationId}/messages/sse`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(dto),
-  });
+export const saveMessage = async (
+  conversationId: number,
+  content: string,
+): Promise<Message> => {
+  const { data } = await api.post<MessageResponse>(
+    `/conversations/${conversationId}/messages`,
+    { content },
+  );
+  return messageAdapter(data);
+};
 
+export const generateMessageResponse = async (
+  messageId: number,
+): Promise<Message> => {
+  const { data } = await api.post<MessageResponse>(
+    `/messages/${messageId}/response`,
+  );
+  return messageAdapter(data);
+};
+
+export const streamMessageResponse = async (
+  messageId: number,
+  onChunk: (message: Message) => void,
+): Promise<Message> => {
+  const response = await fetch(
+    `http://localhost:8000/api/messages/${messageId}/response/sse`,
+    { method: "POST" },
+  );
   if (!response.ok) {
     throw new Error(`Error en el stream: ${response.statusText}`);
   }
 
-  // Leer el ReadableStream...
+  const reader = response.body?.getReader();
+  if (!reader) {
+    throw new Error("El servidor no devolvió un stream de mensajes.");
+  }
+
+  const decoder = new TextDecoder();
+  let buffer = "";
+  let savedResponse: Message | undefined;
+
+  const processLine = (line: string) => {
+    if (!line.trim()) return;
+    const message = messageAdapter(
+      JSON.parse(line) as StreamMessageResponse,
+    );
+    onChunk(message);
+    if (message.id !== null) savedResponse = message;
+  };
+
+  while (true) {
+    const { done, value } = await reader.read();
+    buffer += decoder.decode(value, { stream: !done });
+    const lines = buffer.split("\n");
+    buffer = lines.pop() ?? "";
+    lines.forEach(processLine);
+    if (done) break;
+  }
+  processLine(buffer);
+
+  if (!savedResponse) {
+    throw new Error("El stream terminó sin un mensaje de respuesta guardado.");
+  }
+  return savedResponse;
 };
 
 export const getMessages = async (conversationId: number): Promise<Message[] | void> => {
