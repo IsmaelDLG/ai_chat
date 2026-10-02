@@ -5,12 +5,15 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.core.exceptions import (
     ConversationNotFoundError,
     ConversationSaveError,
+    InvalidMessageRoleError,
+    MessageNotFoundError,
     MessageSaveError,
     LLMNotAvailableError,
 )
 
 from app.api.routes.health import router as health_router
 from app.api.routes.conversation import router as conversation_router
+from app.api.routes.message import response_router as message_response_router
 from app.api.routes.message import router as message_router
 
 app = FastAPI(
@@ -30,6 +33,22 @@ async def conversation_not_found_handler(
 
 @app.exception_handler(MessageSaveError)
 async def message_save_handler(request: Request, exc: MessageSaveError):
+    return JSONResponse(
+        status_code=status.HTTP_400_BAD_REQUEST, content={"detail": str(exc)}
+    )
+
+
+@app.exception_handler(MessageNotFoundError)
+async def message_not_found_handler(request: Request, exc: MessageNotFoundError):
+    return JSONResponse(
+        status_code=status.HTTP_404_NOT_FOUND, content={"detail": str(exc)}
+    )
+
+
+@app.exception_handler(InvalidMessageRoleError)
+async def invalid_message_role_handler(
+    request: Request, exc: InvalidMessageRoleError
+):
     return JSONResponse(
         status_code=status.HTTP_400_BAD_REQUEST, content={"detail": str(exc)}
     )
@@ -74,3 +93,4 @@ app.add_middleware(
 app.include_router(health_router)
 app.include_router(conversation_router)
 app.include_router(message_router)
+app.include_router(message_response_router)

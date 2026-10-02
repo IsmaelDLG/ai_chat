@@ -6,6 +6,12 @@ from app.dataaccess.repositories.base import BaseRepository
 
 
 class MessageRepository(BaseRepository):
+    async def get_by_id(self, message_id: int) -> MessageDTO | None:
+        message = await self.session.get(Messages, message_id)
+        if message is None:
+            return None
+        return MessageDTO.model_validate(message)
+
     async def get_by_conversation_id(self, conversation_id: int) -> list[MessageDTO]:
         stmt = (
             select(Messages)

@@ -7,6 +7,8 @@ import asyncio
 from app.core.config import get_settings
 from app.core.exceptions import (
     ConversationNotFoundError,
+    InvalidMessageRoleError,
+    MessageNotFoundError,
     MessageSaveError,
     LLMNotAvailableError,
 )
@@ -37,7 +39,7 @@ class MessageService:
 
         return await self.repository.get_by_conversation_id(conversation_id)
 
-    async def send_message(self, message: MessageCreateFullDTO) -> MessageDTO:
+    async def create_message(self, message: MessageCreateFullDTO) -> MessageDTO:
         conversation_id = message.conversation_id
         conversation: ConversationDTO = await self.conv_repository.get_by_id(
             conversation_id
@@ -46,18 +48,40 @@ class MessageService:
             raise ConversationNotFoundError(conversation_id)
 
         try:
-            await self.repository.save(message)
+            result = await self.repository.save(message)
         except Exception:
             raise MessageSaveError(message.content)
 
+        await self.conv_repository.update_updated_at(conversation_id)
+        return result
+
+    async def _get_response_context(
+        self, message_id: int
+    ) -> tuple[MessageDTO, list[dict[str, str]]]:
+        message = await self.repository.get_by_id(message_id)
+        if message is None:
+            raise MessageNotFoundError(message_id)
+        if message.role != Role.USER:
+            raise InvalidMessageRoleError(message_id)
+
+        conversation_id = message.conversation_id
+        conversation = await self.conv_repository.get_by_id(conversation_id)
+        if not conversation:
+            raise ConversationNotFoundError(conversation_id)
+
         conversation_messages = await self.repository.get_by_conversation_id(conversation_id)
         messages_parsed = [ChatCompletionMessage.model_validate(message.model_dump()) for message in conversation_messages]
-        json = [message.model_dump() for message in messages_parsed]
+        messages = [message.model_dump() for message in messages_parsed]
+        return message, messages
+
+    async def generate_response(self, message_id: int) -> MessageDTO:
+        message, messages = await self._get_response_context(message_id)
+        conversation_id = message.conversation_id
         
         try:
             response = await client.chat.completions.create(
                 model=settings.llm_model,
-                messages=json,
+                messages=messages,
             )
         except Exception:
             raise LLMNotAvailableError()
@@ -79,32 +103,28 @@ class MessageService:
 
         return result
 
-    async def send_message_stream(self, message: MessageCreateFullDTO) -> AsyncGenerator[str, None]:
+    async def generate_response_stream(
+        self, message_id: int
+    ) -> AsyncGenerator[str, None]:
+        message, messages = await self._get_response_context(message_id)
+        return self._stream_response(message, messages)
+
+    async def _stream_response(
+        self, message: MessageDTO, messages: list[dict[str, str]]
+    ) -> AsyncGenerator[str, None]:
         conversation_id = message.conversation_id
-        conversation: ConversationDTO = await self.conv_repository.get_by_id(
-            conversation_id
-        )
-        if not conversation:
-            raise ConversationNotFoundError(conversation_id)
-
-        try:
-            await self.repository.save(message)
-        except Exception:
-            raise MessageSaveError(message.content)
-
-        conversation_messages = await self.repository.get_by_conversation_id(conversation_id)
-        messages_parsed = [ChatCompletionMessage.model_validate(message.model_dump()) for message in conversation_messages]
-        json = [message.model_dump() for message in messages_parsed]
         full_response = ""
         created_at = datetime.datetime.now(datetime.timezone.utc)
         try:
             response = await client.chat.completions.create(
                 model=settings.llm_model,
-                messages=json,
+                messages=messages,
                 stream=True
             )
             async for chunk in response:
                 delta = chunk.choices[0].delta.content
+                if not delta:
+                    continue
                 full_response += delta
                 dto = MessageDTO(
                     id=None,  # El ID de BD aún no existe mientras streameamos
@@ -124,7 +144,7 @@ class MessageService:
 
         if full_response:
             assistant_message = MessageCreateFullDTO(
-                conversation_id=message.conversation_id,
+                conversation_id=conversation_id,
                 role=Role.ASSISTANT,
                 content=full_response,
             )

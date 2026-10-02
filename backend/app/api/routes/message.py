@@ -14,6 +14,7 @@ from app.api.deps import get_message_service
 router = APIRouter(
     prefix="/api/conversations/{conversation_id}/messages", tags=["message"]
 )
+response_router = APIRouter(prefix="/api/messages", tags=["message"])
 
 
 @router.get("", response_model=list[MessageDTO])
@@ -34,20 +35,25 @@ async def create(
     fullDTO = MessageCreateFullDTO(
         **dto.model_dump(), conversation_id=conversation_id, role=Role.USER
     )
-    response: MessageDTO = await service.send_message(fullDTO)
+    response: MessageDTO = await service.create_message(fullDTO)
 
     return response
 
-@router.post("/sse", response_model=MessageDTO)
+
+@response_router.post("/{message_id}/response", response_model=MessageDTO)
+async def generate_response(
+    message_id: int,
+    service: MessageService = Depends(get_message_service),
+) -> MessageDTO:
+    return await service.generate_response(message_id)
+
+
+@response_router.post("/{message_id}/response/sse")
 async def create_stream(
-    conversation_id: int,
-    dto: MessageCreateDTO,
+    message_id: int,
     service: MessageService = Depends(get_message_service),
 ):
-    fullDTO = MessageCreateFullDTO(
-        **dto.model_dump(), conversation_id=conversation_id, role=Role.USER
-    )
     return StreamingResponse(
-        service.send_message_stream(fullDTO),
+        await service.generate_response_stream(message_id),
         media_type="application/x-ndjson"
     )

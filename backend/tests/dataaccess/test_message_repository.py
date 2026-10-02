@@ -97,3 +97,22 @@ async def test_get_by_conversation_id_returns_messages_in_order(session: AsyncSe
         conversation.id,
         conversation.id,
     ]
+
+
+@pytest.mark.asyncio
+async def test_get_by_id_returns_message_or_none(session: AsyncSession):
+    conversation_repo = ConversationRepository(session)
+    conversation = await conversation_repo.save(
+        ConversationCreateDTO(title="Message lookup")
+    )
+    repo = MessageRepository(session)
+    saved = await repo.save(
+        MessageCreateFullDTO(
+            conversation_id=conversation.id,
+            role=Role.USER,
+            content="Find me",
+        )
+    )
+
+    assert await repo.get_by_id(saved.id) == saved
+    assert await repo.get_by_id(404) is None

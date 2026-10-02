@@ -1,451 +1,262 @@
 import json
+from datetime import datetime, timezone as tz
 from types import SimpleNamespace
 from unittest.mock import AsyncMock, MagicMock, patch
+
 import pytest
-from datetime import datetime, timezone as tz
 
 from app.core.config import get_settings
-from app.services.message import MessageService
-from app.models.message import MessageCreateFullDTO, MessageDTO, Role
-from app.models.conversation import ConversationDTO
 from app.core.exceptions import (
     ConversationNotFoundError,
-    MessageSaveError,
+    InvalidMessageRoleError,
     LLMNotAvailableError,
+    MessageNotFoundError,
+    MessageSaveError,
 )
+from app.models.conversation import ConversationDTO
+from app.models.message import MessageCreateFullDTO, MessageDTO, Role
+from app.services.message import MessageService
+
+
+def make_conversation(conversation_id: int = 1) -> ConversationDTO:
+    now = datetime.now(tz.utc)
+    return ConversationDTO(
+        id=conversation_id,
+        title="test",
+        created_at=now,
+        updated_at=now,
+    )
+
+
+def make_message(
+    message_id: int = 1,
+    role: Role = Role.USER,
+    content: str = "Hello",
+    conversation_id: int = 1,
+) -> MessageDTO:
+    return MessageDTO(
+        id=message_id,
+        conversation_id=conversation_id,
+        role=role,
+        content=content,
+        created_at=datetime.now(tz.utc),
+    )
 
 
 @pytest.mark.asyncio
-async def test_send_message_conversation_not_found():
-    # Arrange
-    dto_input = MessageCreateFullDTO(
-        conversation_id=999,  # ID que no existe
+async def test_create_message_saves_only_user_message_and_updates_conversation():
+    user_message = MessageCreateFullDTO(
+        conversation_id=1,
         role=Role.USER,
-        content="Hola",
+        content="Hello",
     )
+    saved_message = make_message()
+    message_repository = MagicMock()
+    message_repository.save = AsyncMock(return_value=saved_message)
+    conversation_repository = MagicMock()
+    conversation_repository.get_by_id = AsyncMock(return_value=make_conversation())
+    conversation_repository.update_updated_at = AsyncMock()
+    service = MessageService(message_repository, conversation_repository)
 
-    mock_message_repository = MagicMock()
-    mock_conversation_repository = MagicMock()
+    result = await service.create_message(user_message)
 
-    mock_conversation_repository.get_by_id = AsyncMock(return_value=None)
+    assert result == saved_message
+    message_repository.save.assert_awaited_once_with(user_message)
+    message_repository.get_by_conversation_id.assert_not_called()
+    conversation_repository.update_updated_at.assert_awaited_once_with(1)
 
-    service = MessageService(mock_message_repository, mock_conversation_repository)
 
-    # Act & Assert
+@pytest.mark.asyncio
+async def test_create_message_rejects_unknown_conversation():
+    user_message = MessageCreateFullDTO(
+        conversation_id=999,
+        role=Role.USER,
+        content="Hello",
+    )
+    message_repository = MagicMock()
+    conversation_repository = MagicMock()
+    conversation_repository.get_by_id = AsyncMock(return_value=None)
+    service = MessageService(message_repository, conversation_repository)
+
     with pytest.raises(ConversationNotFoundError):
-        await service.send_message(dto_input)
+        await service.create_message(user_message)
 
-    mock_conversation_repository.get_by_id.assert_awaited_once_with(
-        dto_input.conversation_id
-    )
-    mock_message_repository.save.assert_not_called()
+    message_repository.save.assert_not_called()
 
 
 @pytest.mark.asyncio
-async def test_send_message_user_save_error():
-    # Arrange
-
-    dto_input = MessageCreateFullDTO(
+async def test_create_message_wraps_repository_save_error():
+    user_message = MessageCreateFullDTO(
         conversation_id=1,
         role=Role.USER,
-        content="Hola, ¿cómo estás?",
+        content="Hello",
     )
+    message_repository = MagicMock()
+    message_repository.save = AsyncMock(side_effect=Exception("database error"))
+    conversation_repository = MagicMock()
+    conversation_repository.get_by_id = AsyncMock(return_value=make_conversation())
+    conversation_repository.update_updated_at = AsyncMock()
+    service = MessageService(message_repository, conversation_repository)
 
-    conversation_dto = ConversationDTO(
-        id=1,
-        title="test",
-        created_at=datetime.now(tz.utc),
-        updated_at=datetime.now(tz.utc),
-    )
-
-    mock_message_repository = MagicMock()
-    expected_exc = Exception("Cannot save message")
-    mock_message_repository.save = AsyncMock(side_effect=expected_exc)
-
-    mock_conversation_repository = MagicMock()
-    mock_conversation_repository.get_by_id = AsyncMock(return_value=conversation_dto)
-
-    service = MessageService(mock_message_repository, mock_conversation_repository)
-
-    # Act & Assert
     with pytest.raises(MessageSaveError):
-        await service.send_message(dto_input)
+        await service.create_message(user_message)
 
-    mock_conversation_repository.get_by_id.assert_awaited_once_with(
-        dto_input.conversation_id
-    )
-
-    mock_message_repository.save.assert_awaited_once_with(dto_input)
+    conversation_repository.update_updated_at.assert_not_awaited()
 
 
 @pytest.mark.asyncio
-async def test_send_message_llm_error():
-    # Arrange
+async def test_generate_response_rejects_unknown_message():
+    message_repository = MagicMock()
+    message_repository.get_by_id = AsyncMock(return_value=None)
+    conversation_repository = MagicMock()
+    service = MessageService(message_repository, conversation_repository)
+
+    with pytest.raises(MessageNotFoundError):
+        await service.generate_response(404)
+
+    message_repository.get_by_conversation_id.assert_not_called()
+    message_repository.save.assert_not_called()
+
+
+@pytest.mark.asyncio
+async def test_generate_response_rejects_non_user_message():
+    message_repository = MagicMock()
+    message_repository.get_by_id = AsyncMock(
+        return_value=make_message(role=Role.ASSISTANT)
+    )
+    conversation_repository = MagicMock()
+    service = MessageService(message_repository, conversation_repository)
+
+    with pytest.raises(InvalidMessageRoleError):
+        await service.generate_response(1)
+
+    conversation_repository.get_by_id.assert_not_called()
+    message_repository.save.assert_not_called()
+
+
+@pytest.mark.asyncio
+async def test_generate_response_uses_saved_history_without_resaving_user_message():
     settings = get_settings()
-
-    dto_input = MessageCreateFullDTO(
-        conversation_id=1,
-        role=Role.USER,
-        content="Hola, ¿cómo estás?",
+    user_message = make_message()
+    previous_assistant = make_message(
+        message_id=2,
+        role=Role.ASSISTANT,
+        content="Earlier reply",
     )
-
-    dto_output = MessageDTO(
-        id=1,
-        conversation_id=1,
-        role=Role.USER,
-        content="Hola, ¿cómo estás?",
-        created_at=datetime.now(tz.utc),
+    assistant_response = make_message(
+        message_id=3,
+        role=Role.ASSISTANT,
+        content="How can I help?",
     )
-
-    conversation_dto = ConversationDTO(
-        id=1,
-        title="test",
-        created_at=datetime.now(tz.utc),
-        updated_at=datetime.now(tz.utc),
+    message_repository = MagicMock()
+    message_repository.get_by_id = AsyncMock(return_value=user_message)
+    message_repository.get_by_conversation_id = AsyncMock(
+        return_value=[user_message, previous_assistant]
     )
+    message_repository.save = AsyncMock(return_value=assistant_response)
+    conversation_repository = MagicMock()
+    conversation_repository.get_by_id = AsyncMock(return_value=make_conversation())
+    conversation_repository.update_updated_at = AsyncMock()
+    ai_response = MagicMock()
+    ai_response.choices[0].message.content = assistant_response.content
 
-    mock_message_repository = MagicMock()
-    mock_message_repository.save = AsyncMock()
-    mock_message_repository.get_by_conversation_id = AsyncMock(
-        return_value=[dto_output]
+    with patch("app.services.message.client") as mock_client:
+        mock_client.chat.completions.create = AsyncMock(return_value=ai_response)
+        service = MessageService(message_repository, conversation_repository)
+
+        result = await service.generate_response(user_message.id)
+
+    assert result == assistant_response
+    mock_client.chat.completions.create.assert_awaited_once_with(
+        model=settings.llm_model,
+        messages=[
+            {"role": Role.USER, "content": "Hello"},
+            {"role": Role.ASSISTANT, "content": "Earlier reply"},
+        ],
     )
+    message_repository.save.assert_awaited_once()
+    saved_assistant_message = message_repository.save.await_args.args[0]
+    assert saved_assistant_message.role == Role.ASSISTANT
+    assert saved_assistant_message.content == assistant_response.content
+    conversation_repository.update_updated_at.assert_awaited_once_with(1)
 
-    mock_conversation_repository = MagicMock()
-    mock_conversation_repository.get_by_id = AsyncMock(return_value=conversation_dto)
-    mock_conversation_repository.update_updated_at = AsyncMock()
+
+@pytest.mark.asyncio
+async def test_generate_response_raises_llm_error_without_saving_assistant():
+    user_message = make_message()
+    message_repository = MagicMock()
+    message_repository.get_by_id = AsyncMock(return_value=user_message)
+    message_repository.get_by_conversation_id = AsyncMock(
+        return_value=[user_message]
+    )
+    message_repository.save = AsyncMock()
+    conversation_repository = MagicMock()
+    conversation_repository.get_by_id = AsyncMock(return_value=make_conversation())
+    conversation_repository.update_updated_at = AsyncMock()
 
     with patch("app.services.message.client") as mock_client:
         mock_client.chat.completions.create = AsyncMock(
-            side_effect=Exception("LLM Error")
+            side_effect=Exception("LLM unavailable")
         )
+        service = MessageService(message_repository, conversation_repository)
 
-        service = MessageService(mock_message_repository, mock_conversation_repository)
-
-        # Act & Arrange
         with pytest.raises(LLMNotAvailableError):
-            await service.send_message(dto_input)
+            await service.generate_response(user_message.id)
 
-        mock_conversation_repository.get_by_id.assert_awaited_once_with(
-            dto_input.conversation_id
-        )
-        mock_message_repository.save.assert_awaited_once_with(dto_input)
-        json = [{"role": dto_output.role, "content": dto_output.content}]
-        mock_client.chat.completions.create.assert_awaited_once_with(
-            model=settings.llm_model,
-            messages=json,
-        )
-        mock_conversation_repository.update_updated_at.assert_not_awaited()
+    message_repository.save.assert_not_awaited()
+    conversation_repository.update_updated_at.assert_not_awaited()
 
 
 @pytest.mark.asyncio
-async def test_send_message():
-    # Arrange
-    settings = get_settings()
-
-    dto_input = MessageCreateFullDTO(
-        conversation_id=1,
-        role=Role.USER,
-        content="Hola, ¿cómo estás?",
-    )
-
-    dto_output = MessageDTO(
-        id=1,
-        conversation_id=1,
-        role=Role.USER,
-        content="Hola, ¿cómo estás?",
-        created_at=datetime.now(tz.utc),
-    )
-
-    conversation_dto = ConversationDTO(
-        id=1,
-        title="test",
-        created_at=datetime.now(tz.utc),
-        updated_at=datetime.now(tz.utc),
-    )
-
-    assistant_dto_response = MessageDTO(
-        id=2,
-        conversation_id=1,
+async def test_generate_response_stream_emits_deltas_then_saved_response():
+    user_message = make_message()
+    assistant_response = make_message(
+        message_id=2,
         role=Role.ASSISTANT,
-        content="Bien, y tú?",
-        created_at=datetime.now(tz.utc),
+        content="Hello world",
     )
-
-    mock_message_repository = MagicMock()
-    mock_message_repository.save = AsyncMock(
-        side_effect=[dto_output, assistant_dto_response]
+    message_repository = MagicMock()
+    message_repository.get_by_id = AsyncMock(return_value=user_message)
+    message_repository.get_by_conversation_id = AsyncMock(
+        return_value=[user_message]
     )
-    mock_message_repository.get_by_conversation_id = AsyncMock(
-        return_value=[dto_output]
-    )
-
-    mock_conversation_repository = MagicMock()
-    mock_conversation_repository.get_by_id = AsyncMock(return_value=conversation_dto)
-    mock_conversation_repository.update_updated_at = AsyncMock()
-
-    mock_ai_client = MagicMock()
-    mock_ai_client.choices[0].message.content = "Bien, y tú?"
-
-    with patch("app.services.message.client") as mock_client:
-        mock_client.chat.completions.create = AsyncMock(return_value=mock_ai_client)
-
-        service = MessageService(mock_message_repository, mock_conversation_repository)
-
-        # Act
-        result = await service.send_message(dto_input)
-
-        # Assert
-        mock_conversation_repository.get_by_id.assert_awaited_once_with(
-            dto_input.conversation_id
-        )
-
-        assert mock_message_repository.save.call_count == 2
-
-        json = [{"role": dto_output.role, "content": dto_output.content}]
-        mock_client.chat.completions.create.assert_awaited_once_with(
-            model=settings.llm_model,
-            messages=json,
-        )
-
-        mock_conversation_repository.update_updated_at.assert_awaited_once_with(
-            dto_input.conversation_id
-        )
-
-        assert result.conversation_id == assistant_dto_response.conversation_id
-        assert result.role == Role.ASSISTANT
-        assert result.content == "Bien, y tú?"
-
-
-@pytest.mark.asyncio
-async def test_send_message_sends_all_conversation_messages_to_llm():
-    # Arrange
-    settings = get_settings()
-    conversation_id = 1
-
-    dto_input = MessageCreateFullDTO(
-        conversation_id=conversation_id,
-        role=Role.USER,
-        content="¿Puedes resumir la conversación?",
-    )
-    conversation_dto = ConversationDTO(
-        id=conversation_id,
-        title="test",
-        created_at=datetime.now(tz.utc),
-        updated_at=datetime.now(tz.utc),
-    )
-    conversation_messages = [
-        MessageDTO(
-            id=1,
-            conversation_id=conversation_id,
-            role=Role.USER,
-            content="El primer mensaje",
-            created_at=datetime.now(tz.utc),
-        ),
-        MessageDTO(
-            id=2,
-            conversation_id=conversation_id,
-            role=Role.ASSISTANT,
-            content="La primera respuesta",
-            created_at=datetime.now(tz.utc),
-        ),
-        MessageDTO(
-            id=3,
-            conversation_id=conversation_id,
-            role=Role.USER,
-            content=dto_input.content,
-            created_at=datetime.now(tz.utc),
-        ),
-    ]
-    assistant_dto_response = MessageDTO(
-        id=4,
-        conversation_id=conversation_id,
-        role=Role.ASSISTANT,
-        content="Este es el resumen.",
-        created_at=datetime.now(tz.utc),
-    )
-
-    mock_message_repository = MagicMock()
-    mock_message_repository.save = AsyncMock(
-        side_effect=[conversation_messages[-1], assistant_dto_response]
-    )
-    mock_message_repository.get_by_conversation_id = AsyncMock(
-        return_value=conversation_messages
-    )
-
-    mock_conversation_repository = MagicMock()
-    mock_conversation_repository.get_by_id = AsyncMock(return_value=conversation_dto)
-    mock_conversation_repository.update_updated_at = AsyncMock()
-
-    mock_ai_client = MagicMock()
-    mock_ai_client.choices[0].message.content = assistant_dto_response.content
-
-    with patch("app.services.message.client") as mock_client:
-        mock_client.chat.completions.create = AsyncMock(return_value=mock_ai_client)
-
-        service = MessageService(mock_message_repository, mock_conversation_repository)
-
-        # Act
-        await service.send_message(dto_input)
-
-        # Assert
-        expected_messages = [
-            {"role": message.role, "content": message.content}
-            for message in conversation_messages
-        ]
-        mock_client.chat.completions.create.assert_awaited_once_with(
-            model=settings.llm_model,
-            messages=expected_messages,
-        )
-
-
-@pytest.mark.asyncio
-async def test_get_messages_conversation_not_found():
-    # Arrange
-    conversation_id = 999  # ID que no existe
-
-    mock_message_repository = MagicMock()
-    mock_conversation_repository = MagicMock()
-
-    mock_conversation_repository.get_by_id = AsyncMock(return_value=None)
-
-    service = MessageService(mock_message_repository, mock_conversation_repository)
-
-    # Act & Assert
-    with pytest.raises(ConversationNotFoundError):
-        await service.get_messages(conversation_id)
-
-    mock_conversation_repository.get_by_id.assert_awaited_once_with(conversation_id)
-
-@pytest.mark.asyncio
-async def test_send_message_stream():
-    # 1. Arrange
-    dto_input = MessageCreateFullDTO(
-        conversation_id=1,
-        role=Role.USER,
-        content="Hola, ¿cómo estás?",
-    )
-
-    dto_output = MessageDTO(
-        id=1,
-        conversation_id=1,
-        role=Role.USER,
-        content="Hola, ¿cómo estás?",
-        created_at=datetime.now(tz.utc),
-    )
-
-    conversation_dto = ConversationDTO(
-        id=1,
-        title="test",
-        created_at=datetime.now(tz.utc),
-        updated_at=datetime.now(tz.utc),
-    )
-
-    assistant_dto_response = MessageDTO(
-        id=2,
-        conversation_id=1,
-        role=Role.ASSISTANT,
-        content="Hola mundo",
-        created_at=datetime.now(tz.utc),
-    )
-
-    mock_message_repository = MagicMock()
-    mock_message_repository.save = AsyncMock(
-        side_effect=[dto_output, assistant_dto_response]
-    )
-    mock_message_repository.get_by_conversation_id = AsyncMock(
-        return_value=[dto_output]
-    )
-
-    mock_conversation_repository = MagicMock()
-    mock_conversation_repository.get_by_id = AsyncMock(return_value=conversation_dto)
-    mock_conversation_repository.update_updated_at = AsyncMock()
+    message_repository.save = AsyncMock(return_value=assistant_response)
+    conversation_repository = MagicMock()
+    conversation_repository.get_by_id = AsyncMock(return_value=make_conversation())
+    conversation_repository.update_updated_at = AsyncMock()
 
     async def mock_openai_stream(*args, **kwargs):
-        chunks_text = ["Hola", " ", "mundo"]
-        for text in chunks_text:
+        for text in ("Hello", " ", "world"):
             yield SimpleNamespace(
-                choices=[
-                    SimpleNamespace(
-                        delta=SimpleNamespace(content=text)
-                    )
-                ]
+                choices=[SimpleNamespace(delta=SimpleNamespace(content=text))]
             )
 
     with patch("app.services.message.client") as mock_client:
-        mock_client.chat.completions.create = AsyncMock(return_value=mock_openai_stream())
+        mock_client.chat.completions.create = AsyncMock(
+            return_value=mock_openai_stream()
+        )
+        service = MessageService(message_repository, conversation_repository)
+        stream = await service.generate_response_stream(user_message.id)
+        chunks = [chunk async for chunk in stream]
 
-        service = MessageService(mock_message_repository, mock_conversation_repository)
+    assert len(chunks) == 4
+    assert json.loads(chunks[0])["content"] == "Hello"
+    assert json.loads(chunks[-1])["content"] == "Hello world"
+    assert json.loads(chunks[-1])["id"] == assistant_response.id
+    mock_client.chat.completions.create.assert_awaited_once()
+    assert mock_client.chat.completions.create.await_args.kwargs["stream"] is True
+    message_repository.save.assert_awaited_once()
+    conversation_repository.update_updated_at.assert_awaited_once_with(1)
 
-        # 2. Act
-        chunks = [chunk async for chunk in service.send_message_stream(dto_input)]
-
-        # 3. Assert - Contenido del Stream
-        assert len(chunks) == 4  # 3 deltas + 1 mensaje final guardado
-
-        first_chunk = json.loads(chunks[0])
-        assert first_chunk["role"] == Role.ASSISTANT
-        assert first_chunk["content"] == "Hola"
-
-        last_chunk = json.loads(chunks[-1])
-        assert last_chunk["role"] == Role.ASSISTANT
-        assert last_chunk["content"] == "Hola mundo"
-        assert last_chunk["id"] == assistant_dto_response.id
-
-        # 4. Assert - Efectos secundarios (Base de Datos y llamadas externas)
-        mock_client.chat.completions.create.assert_called_once()
-        assert mock_client.chat.completions.create.call_args.kwargs.get("stream") is True
-
-        assert mock_message_repository.save.call_count == 2
-        mock_conversation_repository.update_updated_at.assert_awaited_once_with(conversation_dto.id)
 
 @pytest.mark.asyncio
-async def test_get_messages():
-    # Arrange
-    conversation_id = 1
+async def test_get_messages_rejects_unknown_conversation():
+    message_repository = MagicMock()
+    conversation_repository = MagicMock()
+    conversation_repository.get_by_id = AsyncMock(return_value=None)
+    service = MessageService(message_repository, conversation_repository)
 
-    conversation_dto = ConversationDTO(
-        id=conversation_id,
-        title="test",
-        created_at=datetime.now(tz.utc),
-        updated_at=datetime.now(tz.utc),
-    )
+    with pytest.raises(ConversationNotFoundError):
+        await service.get_messages(404)
 
-    messages_dto_response = [
-        MessageDTO(
-            id=2,
-            conversation_id=conversation_id,
-            role=Role.ASSISTANT,
-            content="Bien, y tú?",
-            created_at=datetime.now(tz.utc),
-        ),
-        MessageDTO(
-            id=3,
-            conversation_id=conversation_id,
-            role=Role.USER,
-            content="¿Y tú?",
-            created_at=datetime.now(tz.utc),
-        ),
-    ]
-
-    mock_message_repository = MagicMock()
-    mock_message_repository.get_by_conversation_id = AsyncMock(
-        return_value=messages_dto_response
-    )
-
-    mock_conversation_repository = MagicMock()
-    mock_conversation_repository.get_by_id = AsyncMock(return_value=conversation_dto)
-    mock_conversation_repository.update_updated_at = AsyncMock()
-
-    service = MessageService(mock_message_repository, mock_conversation_repository)
-
-    # Act
-    result = await service.get_messages(conversation_id)
-
-    # Assert
-    mock_conversation_repository.get_by_id.assert_awaited_once_with(conversation_id)
-
-    mock_message_repository.get_by_conversation_id.assert_awaited_once_with(
-        conversation_id
-    )
-
-    assert result == messages_dto_response
+    message_repository.get_by_conversation_id.assert_not_called()

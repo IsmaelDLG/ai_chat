@@ -14,6 +14,24 @@ class MessageSaveError(Exception):
         super().__init__(f'Message with content: "{content}" could not be saved.')
 
 
+class MessageNotFoundError(Exception):
+    """Thrown when a message is not found in DDBB"""
+
+    def __init__(self, message_id: int):
+        self.message_id = message_id
+        super().__init__(f"Message with ID: {message_id} was not found.")
+
+
+class InvalidMessageRoleError(Exception):
+    """Thrown when a response is requested for a non-user message"""
+
+    def __init__(self, message_id: int):
+        self.message_id = message_id
+        super().__init__(
+            f"Message with ID: {message_id} is not a user message."
+        )
+
+
 class ConversationSaveError(Exception):
     """Thrown when a conversation cannot be saved in DDBB"""
 
