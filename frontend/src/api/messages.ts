@@ -1,5 +1,16 @@
-import type { Message } from "../types";
+import type { Message, MessageResponse } from "../types";
 import { api } from "./client";
+
+const messageAdapter = (data: MessageResponse): Message => {
+  const result: Message = {
+    id: data.id,
+    conversationId: data.conversationId,
+    role: data.role,
+    content: data.content,
+    createdAt: new Date(data.createdAt),
+  }
+  return result
+}
 
 const streamMessage = async (conversationId: number, dto: Message) => {
   
@@ -20,8 +31,8 @@ const streamMessage = async (conversationId: number, dto: Message) => {
 
 export const getMessages = async (conversationId: number): Promise<Message[] | void> => {
     try {
-        const { data } = await api.get<Message[]>(`/conversations/${conversationId}/messages`)
-        return data
+        const { data } = await api.get<MessageResponse[]>(`/conversations/${conversationId}/messages`)
+        return data.map(d => messageAdapter(d))
     } catch (error) {
       console.log('Error al cargar historial:', error);
     }
