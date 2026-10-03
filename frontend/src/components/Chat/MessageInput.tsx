@@ -32,11 +32,10 @@ const MessageInput: React.FC<MessageInputProps> = ({
   };
   
   return (
-    <div className="flex w-full">
-      <div className="py-5 bg-gradient-to-b from-transparent to-white"></div>
+    <div className="flex flex-col w-full pt-2">
       <form
         onSubmit={handleSubmit}
-        className="flex gap-2 pb-4 w-9/10 mx-auto bg-white"
+        className="flex gap-2 pb-4 w-9/10 mx-auto px-5 bg-white"
       >
         <textarea
           rows={1}

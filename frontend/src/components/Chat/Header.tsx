@@ -8,7 +8,7 @@ interface HeaderProps {
 const ChatHeader: React.FC<HeaderProps> = ({ conversation, onClose }) => {
   return (
     <header className="flex w-full">
-      <div className="w-9/10 mx-auto pt-5 pb-2 bg-white flex flex-row justify-between">
+      <div className="w-9/10 mx-auto pt-5 pb-2 px-5 bg-white flex flex-row justify-between">
         {conversation?.id && (
           <>
             <h2 className="text-xl font-bold text-gray-900">

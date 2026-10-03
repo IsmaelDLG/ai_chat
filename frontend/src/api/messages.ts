@@ -55,13 +55,18 @@ export const streamMessageResponse = async (
   let buffer = "";
   let savedResponse: Message | undefined;
 
+  let previousChunk: Message | null = null;
   const processLine = (line: string) => {
     if (!line.trim()) return;
     const message = messageAdapter(
       JSON.parse(line) as StreamMessageResponse,
     );
+    if (previousChunk && message.id === null) {
+      message.content = previousChunk.content + message.content;
+    }
     onChunk(message);
     if (message.id !== null) savedResponse = message;
+    previousChunk = message;
   };
 
   while (true) {

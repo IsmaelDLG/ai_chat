@@ -9,6 +9,7 @@ import StartConversation from "./StartConversation";
 
 
 function Chat() {
+
   const conversation = useConversationStore((state) => state.current);
   const clearConversation = useConversationStore((state) => state.set);
   const createConversation = useConversationStore((state) => state.add);
@@ -16,6 +17,7 @@ function Chat() {
   const clearMessages = useMessageStore((state) => state.clear);
   const sendMessage = useMessageStore((state) => state.send);
   const getMessages = useMessageStore((state) => state.getByConversationId);
+  const isLoading = useMessageStore((state) => state.loading);
 
   const messages = useMessageStore((state) => state.messages);
 
@@ -52,8 +54,8 @@ function Chat() {
         conversation={conversation}
         onClose={handleCloseConversation}
       />
-      <MessagesList messages={messages} />
-      <MessageInput handleSend={handleSendMessage} isLoading={false} />
+      <MessagesList conversationId={conversation?.id} messages={messages} />
+      <MessageInput handleSend={handleSendMessage} isLoading={isLoading} />
       </>}
       {!conversation?.id && 
         <StartConversation onSubmit={handleCreateConversation} />
