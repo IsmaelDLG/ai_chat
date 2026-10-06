@@ -18,6 +18,7 @@ const MessagesList: React.FC<MessagesListProps> = ({
     const element = messagesListRef.current;
 
     if (!element) return;
+    if (messages.length === 0) return;
 
     const conversationChanged =
       previousConversationId.current !== conversationId;

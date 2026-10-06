@@ -1,5 +1,6 @@
 import { useState } from "react";
 
+import { Send, Loader } from "lucide-react";
 interface MessageInputProps {
   handleSend: (message: string) => void;
   isLoading: boolean;
@@ -30,7 +31,7 @@ const MessageInput: React.FC<MessageInputProps> = ({
       send();
     }
   };
-  
+
   return (
     <div className="flex flex-col w-full pt-2">
       <form
@@ -49,9 +50,10 @@ const MessageInput: React.FC<MessageInputProps> = ({
         <button
           type="submit"
           disabled={isLoading}
-          className="px-4 py-2 bg-blue-600 text-white rounded-md font-medium hover:bg-blue-500 disabled:opacity-50 transition-colors"
+          className="flex flex-row items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-md font-medium hover:bg-blue-500 disabled:opacity-50 transition-colors"
         >
-          {isLoading ? "Enviando..." : "Enviar"}
+          {!isLoading && <Send className="w-4 h-4" />}
+          {isLoading && <Loader className="w-4 h-4 animate-spin" />}
         </button>
       </form>
     </div>

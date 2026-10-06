@@ -9,8 +9,8 @@ const conversationAdapter = (response: ConversationResponse): Conversation => {
   const result: Conversation = {
     id: response.id,
     title: response.title,
-    createdAt: new Date(response.createdAt),
-    updatedAt: new Date(response.updatedAt),
+    createdAt: new Date(response.created_at),
+    updatedAt: new Date(response.updated_at),
   };
   return result;
 };

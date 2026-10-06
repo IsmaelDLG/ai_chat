@@ -1,3 +1,4 @@
+import { X } from "lucide-react";
 import type { Conversation } from "../../types";
 
 interface HeaderProps {
@@ -15,7 +16,7 @@ const ChatHeader: React.FC<HeaderProps> = ({ conversation, onClose }) => {
               {conversation?.title}
             </h2>
             <button className="text-xl" onClick={onClose}>
-              Close
+              <X className="w-6 h-6" />
             </button>
           </>
         )}
