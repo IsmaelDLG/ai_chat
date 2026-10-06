@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Response
 
 from app.models.conversation import ConversationCreateDTO, ConversationDTO
 from app.services.conversation import ConversationService
@@ -22,3 +22,12 @@ async def get_all(
 ) -> list[ConversationDTO]:
     response: list[ConversationDTO] = await service.get_all_conversations()
     return response
+
+@router.put("/{conversation_id}/title/generate", status_code=204)
+async def generate_title(
+    conversation_id: int,
+    service: ConversationService = Depends(get_conversation_service),
+) -> None:
+    await service.generate_title(conversation_id)
+    return Response(status_code=204)
+    

@@ -14,18 +14,16 @@ def get_conversation_repository(
 ) -> ConversationRepository:
     return ConversationRepository(db)
 
-
-def get_conversation_service(
-    repo: ConversationRepository = Depends(get_conversation_repository),
-) -> ConversationService:
-    return ConversationService(repo)
-
-
 def get_message_repository(
     db: AsyncSession = Depends(get_db),
 ) -> MessageRepository:
     return MessageRepository(db)
 
+def get_conversation_service(
+    conv_repo: ConversationRepository = Depends(get_conversation_repository),
+    msg_repo: MessageRepository = Depends(get_message_repository),
+) -> ConversationService:
+    return ConversationService(conv_repo, msg_repo)
 
 def get_message_service(
     msg_repo: MessageRepository = Depends(get_message_repository),

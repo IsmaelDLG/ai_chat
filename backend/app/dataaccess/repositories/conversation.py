@@ -37,7 +37,7 @@ class ConversationRepository(BaseRepository):
 
     async def update_updated_at(
         self, conversation_id: int, updated_at: datetime | None = None
-    ):
+    ) -> None:
         if updated_at is None:
             updated_at = datetime.now(tz.utc)
 
@@ -45,6 +45,15 @@ class ConversationRepository(BaseRepository):
             update(Conversations)
             .where(Conversations.id == conversation_id)
             .values(updated_at=updated_at)
+        )
+        await self.session.execute(query)
+        await self.session.commit()
+
+    async def update_title(self, conversation_id: int, title: str) -> None:
+        query = (
+            update(Conversations)
+            .where(Conversations.id == conversation_id)
+            .values(title=title)
         )
         await self.session.execute(query)
         await self.session.commit()

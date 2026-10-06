@@ -1,10 +1,8 @@
 import datetime
 from typing import AsyncGenerator
 
-from openai import AsyncOpenAI
 import asyncio
 
-from app.core.config import get_settings
 from app.core.exceptions import (
     ConversationNotFoundError,
     InvalidMessageRoleError,
@@ -17,13 +15,10 @@ from app.models.message import ChatCompletionMessage, MessageCreateFullDTO, Mess
 from app.dataaccess.repositories.conversation import ConversationRepository
 from app.dataaccess.repositories.message import MessageRepository
 from app.models.conversation import ConversationDTO
+from app.core.config import get_settings
+from app.dataaccess.llm import generate_response, client
 
 settings = get_settings()
-
-client = AsyncOpenAI(
-    base_url=settings.llm_base_url,
-    api_key=settings.llm_api_key,
-)
 
 class MessageService:
     def __init__(self, msg_repo: MessageRepository, conv_repo: ConversationRepository):
@@ -78,15 +73,7 @@ class MessageService:
         message, messages = await self._get_response_context(message_id)
         conversation_id = message.conversation_id
         
-        try:
-            response = await client.chat.completions.create(
-                model=settings.llm_model,
-                messages=messages,
-            )
-        except Exception:
-            raise LLMNotAvailableError()
-
-        response_str = response.choices[0].message.content
+        response_str = await generate_response(messages)
 
         assistant_message = MessageCreateFullDTO(
             conversation_id=message.conversation_id,

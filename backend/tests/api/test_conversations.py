@@ -84,3 +84,24 @@ def test_get_all_conversations(client, mock_conversation_service):
     assert response.json()[1]["title"] == "Test Conversation 2"
 
     mock_conversation_service.get_all_conversations.assert_awaited_once()
+
+def test_generate_conversation_title(client, mock_conversation_service):
+    # Arrange
+    expected_response = ConversationDTO(
+        id=1,
+        title="Generated Title",
+        created_at=datetime.now(tz.utc),
+        updated_at=datetime.now(tz.utc),
+    )
+
+    mock_conversation_service.generate_title = AsyncMock()   
+
+    # Act
+    response = client.put(
+        f"/api/conversations/{expected_response.id}/title/generate",
+        json={}
+    )
+
+    # Assert
+    assert response.status_code == 204
+    mock_conversation_service.generate_title.assert_awaited_once_with(expected_response.id)
