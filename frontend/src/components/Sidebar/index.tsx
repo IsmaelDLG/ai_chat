@@ -7,9 +7,9 @@ function Sidebar() {
     const onReload = useConversationStore((state) => state.getAll);
 
     return (
-        <aside className="w-80 overflow-y-auto">
-            <header className="flex items-center justify-between">
-                <div className="flex items-center  gap-2 px-4 py-4">
+        <aside className="w-100 overflow-y-auto border-r border-gray-300">
+            <header className="flex items-center justify-between mx-4  border-b border-gray-300">
+                <div className="flex items-center gap-2 px-4 py-4">
                     <Clock />
                     <h2 className="text-gray-900 font-bold text-3xl">Recent</h2>
                 </div>
