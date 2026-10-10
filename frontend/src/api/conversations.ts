@@ -37,3 +37,13 @@ export const createConversation = async (
     console.error("Error al crear conversación:", error);
   }
 };
+
+export const generateTitle = async (conversationId: number): Promise<Conversation | void> => {
+  try {
+    const { data } = await api.put<ConversationResponse>(`/conversations/${conversationId}/title/generate`, {})
+    return conversationAdapter(data);
+  } catch (error) {
+    console.error("Error al generar título:", error);
+  }
+};
+

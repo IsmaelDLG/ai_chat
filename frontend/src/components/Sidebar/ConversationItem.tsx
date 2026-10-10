@@ -9,9 +9,8 @@ export const ConversationItem: React.FC<ConversationItemProps> = ({ conversation
     const { id, title, updatedAt } = conversation
 
     return (
-        <li className="flex flex-col mt-2 hover:bg-gray-100 cursor-pointer" onClick={() => onSelect(id)}>
-            <div className="text-gray-900 text-xl">{title}</div>
-            <div className="self-end text-gray-600 text-sm">Last updated: {updatedAt.toLocaleDateString()}</div>
+        <li className="flex flex-col px-4 py-2 hover:bg-gray-100 cursor-pointer border-b border-gray-300" onClick={() => onSelect(id)}>
+            <div className="text-gray-900 text-normal">{title}</div>
         </li>
     )
 }

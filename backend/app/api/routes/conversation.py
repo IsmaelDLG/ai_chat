@@ -23,11 +23,11 @@ async def get_all(
     response: list[ConversationDTO] = await service.get_all_conversations()
     return response
 
-@router.put("/{conversation_id}/title/generate", status_code=204)
+@router.put("/{conversation_id}/title/generate", response_model=ConversationDTO)
 async def generate_title(
     conversation_id: int,
     service: ConversationService = Depends(get_conversation_service),
 ) -> None:
-    await service.generate_title(conversation_id)
-    return Response(status_code=204)
+    response: ConversationDTO = await service.generate_title(conversation_id)
+    return response
     

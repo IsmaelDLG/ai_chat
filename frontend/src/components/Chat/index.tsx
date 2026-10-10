@@ -13,6 +13,7 @@ function Chat() {
   const conversation = useConversationStore((state) => state.current);
   const clearConversation = useConversationStore((state) => state.set);
   const createConversation = useConversationStore((state) => state.add);
+  const generateConversationTitle = useConversationStore((state) => state.generateTitle);
 
   const clearMessages = useMessageStore((state) => state.clear);
   const sendMessage = useMessageStore((state) => state.send);
@@ -34,7 +35,9 @@ function Chat() {
     if (!conversation?.id) {
       console.log("Conversation ID is not defined");
     } else {
+      console.log(`current time is ${new Date().toLocaleDateString()}`)
       sendMessage(conversation?.id, message);
+      console.log(`current time is ${new Date().toLocaleDateString()}`)
     }
   };
 
@@ -43,8 +46,13 @@ function Chat() {
   };
 
   const handleCreateConversation = () => {
-    createConversation(`New conversation ${new Date().getTime()}`);
+    createConversation("");
   }
+
+  useEffect(() => {
+    if (!conversation?.title && messages.length > 1 && !isLoading)
+      generateConversationTitle()
+  }, [conversation, messages, isLoading])
 
 
   return (

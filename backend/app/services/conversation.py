@@ -23,7 +23,7 @@ class ConversationService:
         models: list[responseDTO] = await self.repository.get_all()
         return models
 
-    async def generate_title(self, conversation_id: int) -> None:
+    async def generate_title(self, conversation_id: int) -> responseDTO:
         conversation: responseDTO = await self.repository.get_by_id(conversation_id)
         if not conversation:
             raise ConversationNotFoundError(conversation_id)
@@ -43,4 +43,9 @@ class ConversationService:
             await self.repository.update_title(conversation_id, response_str)
         except Exception:
             raise ConversationSaveError()
+
+        return conversation
+
+
+        
 
