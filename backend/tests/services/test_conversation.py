@@ -13,20 +13,23 @@ from app.core.exceptions import ConversationSaveError
 @pytest.mark.asyncio
 async def test_create_conversation_success():
     # Prepare
-    mock_repository = MagicMock()
 
     dto_input = MagicMock(spec=requestDTO)
     expected_dto_response = MagicMock(spec=responseDTO)
 
-    mock_repository.save = AsyncMock(return_value=expected_dto_response)
+    mock_conv_repository = MagicMock()
+    mock_conv_repository.save = AsyncMock(return_value=expected_dto_response)
+    mock_msg_repository = MagicMock()
 
-    service = ConversationService(mock_repository)
+
+
+    service = ConversationService(mock_conv_repository, mock_msg_repository)
 
     # Act
     result = await service.create_conversation(dto_input)
 
     # Test
-    mock_repository.save.assert_called_once_with(dto_input)
+    mock_conv_repository.save.assert_called_once_with(dto_input)
 
     assert result == expected_dto_response
 
@@ -40,8 +43,9 @@ async def test_create_conversation_error():
     expected_exception = Exception("Failed to save conversation")
 
     mock_repository.save = AsyncMock(side_effect=expected_exception)
+    mock_msg_repository = MagicMock()
 
-    service = ConversationService(mock_repository)
+    service = ConversationService(mock_repository, mock_msg_repository)
 
     with pytest.raises(ConversationSaveError):
         await service.create_conversation(dto_input)
@@ -54,8 +58,9 @@ async def test_get_all_conversations_success():
 
     expected_dto_responses = [MagicMock(spec=responseDTO), MagicMock(spec=responseDTO)]
     mock_repository.get_all = AsyncMock(return_value=expected_dto_responses)
+    mock_msg_repository = MagicMock()
 
-    service = ConversationService(mock_repository)
+    service = ConversationService(mock_repository, mock_msg_repository)
 
     # Act
     result = await service.get_all_conversations()

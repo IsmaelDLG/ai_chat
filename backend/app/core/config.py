@@ -9,6 +9,8 @@ class Settings(BaseSettings):
     llm_base_url: str = "http://127.0.0.1:11434/v1/"
     llm_api_key: str = "ollama"
     llm_model: str
+    web_search_max_results: int = 5
+    llm_max_tool_calls: int = 3
 
     db_user: str
     db_password: str

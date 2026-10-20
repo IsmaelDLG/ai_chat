@@ -16,7 +16,7 @@ from app.dataaccess.repositories.conversation import ConversationRepository
 from app.dataaccess.repositories.message import MessageRepository
 from app.models.conversation import ConversationDTO
 from app.core.config import get_settings
-from app.dataaccess.llm import generate_response, client
+from app.dataaccess.llm import generate_response as generate_response_llm, client
 
 settings = get_settings()
 
@@ -73,7 +73,7 @@ class MessageService:
         message, messages = await self._get_response_context(message_id)
         conversation_id = message.conversation_id
         
-        response_str = await generate_response(messages)
+        response_str = await generate_response_llm(messages)
 
         assistant_message = MessageCreateFullDTO(
             conversation_id=message.conversation_id,

@@ -157,22 +157,18 @@ async def test_generate_response_uses_saved_history_without_resaving_user_messag
     conversation_repository = MagicMock()
     conversation_repository.get_by_id = AsyncMock(return_value=make_conversation())
     conversation_repository.update_updated_at = AsyncMock()
-    ai_response = MagicMock()
-    ai_response.choices[0].message.content = assistant_response.content
 
-    with patch("app.services.message.client") as mock_client:
-        mock_client.chat.completions.create = AsyncMock(return_value=ai_response)
+    with patch("app.services.message.generate_response_llm") as generate_response_llm:
+        generate_response_llm.return_value = assistant_response.content
         service = MessageService(message_repository, conversation_repository)
 
         result = await service.generate_response(user_message.id)
 
     assert result == assistant_response
-    mock_client.chat.completions.create.assert_awaited_once_with(
-        model=settings.llm_model,
-        messages=[
+    generate_response_llm.assert_awaited_once_with([
             {"role": Role.USER, "content": "Hello"},
             {"role": Role.ASSISTANT, "content": "Earlier reply"},
-        ],
+        ]
     )
     message_repository.save.assert_awaited_once()
     saved_assistant_message = message_repository.save.await_args.args[0]
@@ -194,10 +190,8 @@ async def test_generate_response_raises_llm_error_without_saving_assistant():
     conversation_repository.get_by_id = AsyncMock(return_value=make_conversation())
     conversation_repository.update_updated_at = AsyncMock()
 
-    with patch("app.services.message.client") as mock_client:
-        mock_client.chat.completions.create = AsyncMock(
-            side_effect=Exception("LLM unavailable")
-        )
+    with patch("app.services.message.generate_response_llm") as generate_response_llm:
+        generate_response_llm.side_effect = LLMNotAvailableError()
         service = MessageService(message_repository, conversation_repository)
 
         with pytest.raises(LLMNotAvailableError):
