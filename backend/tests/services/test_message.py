@@ -136,7 +136,6 @@ async def test_generate_response_rejects_non_user_message():
 
 @pytest.mark.asyncio
 async def test_generate_response_uses_saved_history_without_resaving_user_message():
-    settings = get_settings()
     user_message = make_message()
     previous_assistant = make_message(
         message_id=2,
