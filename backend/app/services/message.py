@@ -1,7 +1,6 @@
 import datetime
-from typing import AsyncGenerator
-
 import asyncio
+from collections.abc import AsyncGenerator
 
 from app.core.exceptions import (
     ConversationNotFoundError,
@@ -15,10 +14,8 @@ from app.models.message import ChatCompletionMessage, MessageCreateFullDTO, Mess
 from app.dataaccess.repositories.conversation import ConversationRepository
 from app.dataaccess.repositories.message import MessageRepository
 from app.models.conversation import ConversationDTO
-from app.core.config import get_settings
-from app.dataaccess.llm import generate_response as generate_response_llm, client
+from app.integrations.llm.chat import generate_response, stream_response
 
-settings = get_settings()
 
 class MessageService:
     def __init__(self, msg_repo: MessageRepository, conv_repo: ConversationRepository):
@@ -73,7 +70,7 @@ class MessageService:
         message, messages = await self._get_response_context(message_id)
         conversation_id = message.conversation_id
         
-        response_str = await generate_response_llm(messages)
+        response_str = await generate_response(messages)
 
         assistant_message = MessageCreateFullDTO(
             conversation_id=message.conversation_id,
@@ -103,15 +100,7 @@ class MessageService:
         full_response = ""
         created_at = datetime.datetime.now(datetime.timezone.utc)
         try:
-            response = await client.chat.completions.create(
-                model=settings.llm_model,
-                messages=messages,
-                stream=True
-            )
-            async for chunk in response:
-                delta = chunk.choices[0].delta.content
-                if not delta:
-                    continue
+            async for delta in stream_response(messages):
                 full_response += delta
                 dto = MessageDTO(
                     id=None,  # El ID de BD aún no existe mientras streameamos
@@ -125,9 +114,10 @@ class MessageService:
         except asyncio.CancelledError:
             # Manejar la cancelación de la solicitud
             print("La solicitud fue cancelada por el cliente.")
-        except Exception as e:
-            print(f"Error al generar la respuesta: {e}")
-            raise LLMNotAvailableError()
+        except LLMNotAvailableError:
+            raise
+        except Exception as exc:
+            raise LLMNotAvailableError() from exc
 
         if full_response:
             assistant_message = MessageCreateFullDTO(

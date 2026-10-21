@@ -1,6 +1,5 @@
 import json
 from datetime import datetime, timezone as tz
-from types import SimpleNamespace
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -157,14 +156,14 @@ async def test_generate_response_uses_saved_history_without_resaving_user_messag
     conversation_repository.get_by_id = AsyncMock(return_value=make_conversation())
     conversation_repository.update_updated_at = AsyncMock()
 
-    with patch("app.services.message.generate_response_llm") as generate_response_llm:
-        generate_response_llm.return_value = assistant_response.content
+    with patch("app.services.message.generate_response") as generate_response:
+        generate_response.return_value = assistant_response.content
         service = MessageService(message_repository, conversation_repository)
 
         result = await service.generate_response(user_message.id)
 
     assert result == assistant_response
-    generate_response_llm.assert_awaited_once_with([
+    generate_response.assert_awaited_once_with([
             {"role": Role.USER, "content": "Hello"},
             {"role": Role.ASSISTANT, "content": "Earlier reply"},
         ]
@@ -189,8 +188,8 @@ async def test_generate_response_raises_llm_error_without_saving_assistant():
     conversation_repository.get_by_id = AsyncMock(return_value=make_conversation())
     conversation_repository.update_updated_at = AsyncMock()
 
-    with patch("app.services.message.generate_response_llm") as generate_response_llm:
-        generate_response_llm.side_effect = LLMNotAvailableError()
+    with patch("app.services.message.generate_response") as generate_response:
+        generate_response.side_effect = LLMNotAvailableError()
         service = MessageService(message_repository, conversation_repository)
 
         with pytest.raises(LLMNotAvailableError):
@@ -218,16 +217,11 @@ async def test_generate_response_stream_emits_deltas_then_saved_response():
     conversation_repository.get_by_id = AsyncMock(return_value=make_conversation())
     conversation_repository.update_updated_at = AsyncMock()
 
-    async def mock_openai_stream(*args, **kwargs):
+    async def mock_stream_response(messages):
         for text in ("Hello", " ", "world"):
-            yield SimpleNamespace(
-                choices=[SimpleNamespace(delta=SimpleNamespace(content=text))]
-            )
+            yield text
 
-    with patch("app.services.message.client") as mock_client:
-        mock_client.chat.completions.create = AsyncMock(
-            return_value=mock_openai_stream()
-        )
+    with patch("app.services.message.stream_response", mock_stream_response):
         service = MessageService(message_repository, conversation_repository)
         stream = await service.generate_response_stream(user_message.id)
         chunks = [chunk async for chunk in stream]
@@ -236,8 +230,6 @@ async def test_generate_response_stream_emits_deltas_then_saved_response():
     assert json.loads(chunks[0])["content"] == "Hello"
     assert json.loads(chunks[-1])["content"] == "Hello world"
     assert json.loads(chunks[-1])["id"] == assistant_response.id
-    mock_client.chat.completions.create.assert_awaited_once()
-    assert mock_client.chat.completions.create.await_args.kwargs["stream"] is True
     message_repository.save.assert_awaited_once()
     conversation_repository.update_updated_at.assert_awaited_once_with(1)
 

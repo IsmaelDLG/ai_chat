@@ -4,7 +4,7 @@ from app.models.message import ChatCompletionMessage
 from app.dataaccess.repositories.conversation import ConversationRepository
 from app.dataaccess.repositories.message import MessageRepository
 from app.core.exceptions import ConversationNotFoundError, ConversationSaveError
-from app.dataaccess.llm import generate_response
+from app.integrations.llm.chat import generate_response
 
 
 class ConversationService:
@@ -48,4 +48,3 @@ class ConversationService:
 
 
         
-
