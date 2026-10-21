@@ -82,6 +82,43 @@ async def test_generate_response_wraps_provider_error():
 
 
 @pytest.mark.asyncio
+async def test_generate_response_does_not_exceed_tool_round_limit():
+    tool_call = SimpleNamespace(
+        id="call-1",
+        function=SimpleNamespace(name="web_search", arguments='{"query":"cats"}'),
+    )
+    tool_response = SimpleNamespace(
+        choices=[
+            SimpleNamespace(
+                message=SimpleNamespace(
+                    content=None,
+                    tool_calls=[tool_call],
+                    model_dump=lambda **_: {"role": "assistant", "tool_calls": []},
+                )
+            )
+        ]
+    )
+
+    with (
+        patch.object(chat.settings, "llm_max_tool_calls", 1),
+        patch.object(
+            chat.client.chat.completions,
+            "create",
+            new=AsyncMock(return_value=tool_response),
+        ) as create,
+        patch(
+            "app.integrations.llm.chat.execute_tool",
+            new=AsyncMock(return_value="[]"),
+        ) as execute,
+    ):
+        with pytest.raises(LLMNotAvailableError):
+            await chat.generate_response([{"role": "user", "content": "Find cats"}])
+
+    assert create.await_count == 2
+    execute.assert_awaited_once()
+
+
+@pytest.mark.asyncio
 async def test_stream_response_yields_text_deltas():
     async def response_stream():
         for text in ("Hello", " world"):
@@ -106,6 +143,151 @@ async def test_stream_response_yields_text_deltas():
 
     assert result == ["Hello", " world"]
     assert create.await_args.kwargs["stream"] is True
+
+
+@pytest.mark.asyncio
+async def test_stream_response_executes_fragmented_tool_call_then_streams_answer():
+    async def tool_call_stream():
+        for tool_call_delta in (
+            SimpleNamespace(
+                index=0,
+                id="call-1",
+                type="function",
+                function=SimpleNamespace(name="web_", arguments='{"que'),
+            ),
+            SimpleNamespace(
+                index=0,
+                id=None,
+                type=None,
+                function=SimpleNamespace(name="search", arguments='ry":"cats"}'),
+            ),
+        ):
+            yield SimpleNamespace(
+                choices=[
+                    SimpleNamespace(
+                        delta=SimpleNamespace(content=None, tool_calls=[tool_call_delta])
+                    )
+                ]
+            )
+
+    async def answer_stream():
+        for text in ("Found ", "some cats"):
+            yield SimpleNamespace(
+                choices=[
+                    SimpleNamespace(
+                        delta=SimpleNamespace(content=text, tool_calls=None)
+                    )
+                ]
+            )
+
+    messages = [{"role": "user", "content": "Find cats"}]
+    with (
+        patch.object(
+            chat.client.chat.completions,
+            "create",
+            new=AsyncMock(
+                side_effect=[tool_call_stream(), answer_stream()]
+            ),
+        ) as create,
+        patch(
+            "app.integrations.llm.chat.execute_tool",
+            new=AsyncMock(return_value='[{"title":"Cats"}]'),
+        ) as execute,
+    ):
+        result = [delta async for delta in chat.stream_response(messages)]
+
+    assert result == ["Found ", "some cats"]
+    assert create.await_count == 2
+    assert all(
+        call.kwargs["tools"] == [chat.WEB_SEARCH_TOOL]
+        and call.kwargs["tool_choice"] == "auto"
+        and call.kwargs["stream"] is True
+        for call in create.await_args_list
+    )
+    execute.assert_awaited_once_with("web_search", '{"query":"cats"}')
+    assert messages[1] == {
+        "role": "assistant",
+        "content": None,
+        "tool_calls": [
+            {
+                "id": "call-1",
+                "type": "function",
+                "function": {
+                    "name": "web_search",
+                    "arguments": '{"query":"cats"}',
+                },
+            }
+        ],
+    }
+    assert messages[2] == {
+        "role": "tool",
+        "tool_call_id": "call-1",
+        "content": '[{"title":"Cats"}]',
+    }
+
+
+@pytest.mark.asyncio
+async def test_stream_response_wraps_tool_round_limit_error():
+    async def tool_call_stream(call_id):
+        yield SimpleNamespace(
+            choices=[
+                SimpleNamespace(
+                    delta=SimpleNamespace(
+                        content=None,
+                        tool_calls=[
+                            SimpleNamespace(
+                                index=0,
+                                id=call_id,
+                                type="function",
+                                function=SimpleNamespace(
+                                    name="web_search", arguments='{"query":"cats"}'
+                                ),
+                            )
+                        ],
+                    )
+                )
+            ]
+        )
+
+    with (
+        patch.object(chat.settings, "llm_max_tool_calls", 1),
+        patch.object(
+            chat.client.chat.completions,
+            "create",
+            new=AsyncMock(
+                side_effect=[
+                    tool_call_stream("call-1"),
+                    tool_call_stream("call-2"),
+                ]
+            ),
+        ) as create,
+        patch(
+            "app.integrations.llm.chat.execute_tool",
+            new=AsyncMock(return_value="[]"),
+        ) as execute,
+    ):
+        with pytest.raises(LLMNotAvailableError):
+            async for _ in chat.stream_response(
+                [{"role": "user", "content": "Find cats"}]
+            ):
+                pass
+
+    assert create.await_count == 2
+    execute.assert_awaited_once()
+
+
+@pytest.mark.asyncio
+async def test_stream_response_wraps_provider_error():
+    with patch.object(
+        chat.client.chat.completions,
+        "create",
+        new=AsyncMock(side_effect=RuntimeError("provider unavailable")),
+    ):
+        with pytest.raises(LLMNotAvailableError):
+            async for _ in chat.stream_response(
+                [{"role": "user", "content": "Hi"}]
+            ):
+                pass
 
 
 @pytest.mark.asyncio
