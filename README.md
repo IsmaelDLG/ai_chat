@@ -155,7 +155,7 @@ The roadmap includes milestones for:
 - Docker Compose setup
 - future web search, CI/CD, and Azure deployment work
 
-The full roadmap is documented in [docs/backend-roadmap.md](docs/backend-roadmap.md).
+The full roadmap is documented in [docs/roadmap.md](docs/roadmap.md).
 
 ---
 
