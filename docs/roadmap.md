@@ -158,8 +158,8 @@ Automatizar validación, empaquetado y despliegue del proyecto para asegurar cal
 
 ### Tareas previstas
 
-- [ ] Crear GitHub Actions
-- [ ] Ejecutar tests automáticamente en pull requests y main
+- [x] Crear GitHub Actions
+- [x] Ejecutar tests automáticamente en pull requests y main
 - [ ] Añadir linting y formateo
 - [ ] Construir contenedores Docker de backend y frontend
 - [ ] Preparar despliegue automático o semi-automático
