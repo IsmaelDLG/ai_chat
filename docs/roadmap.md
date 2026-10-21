@@ -146,74 +146,11 @@ Esto permitió ejecutar el proyecto completo de forma reproducible y simplificó
 
 ---
 
-## Milestone 9 — Web Search (fase actual)
+## Milestone 9 — Web Search
 
-### Objetivo
+Se añadieron tool_calls (web_search) con DDGS para que el modelo pueda consultar en internet, tanto en mensajes normales como en streaming.
 
-Permitir que el modelo consulte Internet cuando necesite información actual, no disponible en su contexto local o en el historial de la conversación.
-
-### Motivación
-
-Hasta este punto, el sistema puede responder desde un contexto de conversación y del modelo base, pero no tiene acceso a información en tiempo real. En muchos casos, esto limita respuestas a temas recientes, noticias, eventos actuales o documentación muy nueva.
-
-### Arquitectura propuesta
-
-```text
-                  User
-                    │
-                    ▼
-               ChatService
-                    │
-                    ▼
-                   LLM
-                    │
-             ┌──────┴──────┐
-             │             │
-          respuesta     web_search
-                           │
-                           ▼
-                      SearchService
-                           │
-                           ▼
-                       Search API
-                           │
-                           ▼
-                          LLM
-                           │
-                           ▼
-                       respuesta
-```
-
-### Tareas principales
-
-- [ ] Elegir proveedor de búsqueda web
-- [ ] Crear `SearchService`
-- [ ] Definir herramienta o función `web_search`
-- [ ] Implementar tool/function calling en el backend
-- [ ] Ejecutar búsquedas desde la capa de servicios
-- [ ] Devolver resultados relevantes al modelo
-- [ ] Incluir fuentes y referencias en la respuesta
-- [ ] Añadir tests para validación del flujo
-
-### Criterios de aceptación
-
-La fase quedará completa cuando:
-
-- el backend pueda consultar una API externa de búsqueda
-- el LLM pueda usar esos resultados como contexto adicional
-- la respuesta final incluya datos frescos y fuentes fiables
-- el sistema mantenga un comportamiento estable y testeado
-
-### Riesgos a considerar
-
-- calidad variable de los resultados
-- costo asociado a búsquedas externas
-- necesidad de filtrar contenido irrelevante o no fiable
-- latencia adicional en la respuesta final
-
----
-
-## Milestone 10 — CI/CD
+## Milestone 10 — CI/CD (fase actual)
 
 ### Objetivo
 
