@@ -32,7 +32,7 @@ async def test_web_search_normalizes_and_limits_results():
 
 
 @pytest.mark.asyncio
-@pytest.mark.parametrize("query", ["", " " , "x" * 501])
+@pytest.mark.parametrize("query", ["", " ", "x" * 501])
 async def test_web_search_rejects_invalid_query(query):
     with pytest.raises(ValueError):
         await web_search(query)

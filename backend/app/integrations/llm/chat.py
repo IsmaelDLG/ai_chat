@@ -91,9 +91,9 @@ async def stream_response(
                         if function_delta.name:
                             tool_call["function"]["name"] += function_delta.name
                         if function_delta.arguments:
-                            tool_call["function"]["arguments"] += (
-                                function_delta.arguments
-                            )
+                            tool_call["function"][
+                                "arguments"
+                            ] += function_delta.arguments
 
             if not tool_calls:
                 return
@@ -101,9 +101,7 @@ async def stream_response(
             if tool_round == settings.llm_max_tool_calls:
                 raise RuntimeError("Maximum tool rounds exceeded")
 
-            assistant_tool_calls = [
-                tool_calls[index] for index in sorted(tool_calls)
-            ]
+            assistant_tool_calls = [tool_calls[index] for index in sorted(tool_calls)]
             if any(
                 not tool_call["id"] or not tool_call["function"]["name"]
                 for tool_call in assistant_tool_calls

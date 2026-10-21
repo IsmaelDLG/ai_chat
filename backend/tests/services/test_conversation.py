@@ -21,8 +21,6 @@ async def test_create_conversation_success():
     mock_conv_repository.save = AsyncMock(return_value=expected_dto_response)
     mock_msg_repository = MagicMock()
 
-
-
     service = ConversationService(mock_conv_repository, mock_msg_repository)
 
     # Act

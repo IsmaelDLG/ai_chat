@@ -16,8 +16,8 @@ config = context.config
 
 # Establece la URL de asyncpg directamente
 config.set_main_option(
-    "sqlalchemy.url", 
-    f"postgresql+asyncpg://{settings.db_user}:{settings.db_password}@{settings.db_host}/{settings.db_name}"
+    "sqlalchemy.url",
+    f"postgresql+asyncpg://{settings.db_user}:{settings.db_password}@{settings.db_host}/{settings.db_name}",
 )
 
 if config.config_file_name is not None:
@@ -25,15 +25,17 @@ if config.config_file_name is not None:
 
 target_metadata = Base.metadata
 
+
 def do_run_migrations(connection):
     context.configure(
         connection=connection,
         target_metadata=target_metadata,
         # Renderiza tipos enum y tipos personalizados correctamente
-        render_as_batch=False 
+        render_as_batch=False,
     )
     with context.begin_transaction():
         context.run_migrations()
+
 
 def run_migrations_offline() -> None:
     # Usamos la misma URL pero síncrona/limpia si ejecutas offline
@@ -47,6 +49,7 @@ def run_migrations_offline() -> None:
 
     with context.begin_transaction():
         context.run_migrations()
+
 
 async def run_async_migrations():
     # Creamos el engine pasando la configuración explícita
@@ -64,8 +67,10 @@ async def run_async_migrations():
 
     await connectable.dispose()
 
+
 def run_migrations_online() -> None:
     asyncio.run(run_async_migrations())
+
 
 if context.is_offline_mode():
     run_migrations_offline()

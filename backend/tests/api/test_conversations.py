@@ -14,6 +14,7 @@ from datetime import datetime, timezone as tz
 def mock_conversation_service():
     return MagicMock()
 
+
 @pytest.fixture
 def client(mock_conversation_service):
     app = FastAPI()
@@ -84,6 +85,7 @@ def test_get_all_conversations(client, mock_conversation_service):
 
     mock_conversation_service.get_all_conversations.assert_awaited_once()
 
+
 def test_generate_conversation_title(client, mock_conversation_service):
     # Arrange
     expected_response = ConversationDTO(
@@ -93,16 +95,17 @@ def test_generate_conversation_title(client, mock_conversation_service):
         updated_at=datetime.now(tz.utc),
     )
 
-    mock_conversation_service.generate_title = AsyncMock(return_value=expected_response)   
+    mock_conversation_service.generate_title = AsyncMock(return_value=expected_response)
 
     # Act
     response = client.put(
-        f"/api/conversations/{expected_response.id}/title/generate",
-        json={}
+        f"/api/conversations/{expected_response.id}/title/generate", json={}
     )
 
     # Assert
     assert response.status_code == 200
     assert response.json()["id"] == 1
     assert response.json()["title"] == "Generated Title"
-    mock_conversation_service.generate_title.assert_awaited_once_with(expected_response.id)
+    mock_conversation_service.generate_title.assert_awaited_once_with(
+        expected_response.id
+    )

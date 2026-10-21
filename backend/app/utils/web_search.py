@@ -16,9 +16,7 @@ def _search_sync(query: str) -> list[dict[str, str]]:
         url = (result.get("href") or result.get("url") or "").strip()
         snippet = (result.get("body") or result.get("snippet") or "").strip()
         if title and urlparse(url).scheme in {"http", "https"}:
-            normalized.append(
-                {"title": title, "url": url, "snippet": snippet[:1000]}
-            )
+            normalized.append({"title": title, "url": url, "snippet": snippet[:1000]})
     return normalized[: settings.web_search_max_results]
 
 

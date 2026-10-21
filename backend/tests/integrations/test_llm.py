@@ -12,9 +12,7 @@ from app.integrations.llm.tools import execute_tool
 @pytest.mark.asyncio
 async def test_generate_response_returns_assistant_content():
     assistant_message = SimpleNamespace(content="Hello", tool_calls=None)
-    response = SimpleNamespace(
-        choices=[SimpleNamespace(message=assistant_message)]
-    )
+    response = SimpleNamespace(choices=[SimpleNamespace(message=assistant_message)])
 
     with patch.object(
         chat.client.chat.completions,
@@ -136,9 +134,7 @@ async def test_stream_response_yields_text_deltas():
     ) as create:
         result = [
             delta
-            async for delta in chat.stream_response(
-                [{"role": "user", "content": "Hi"}]
-            )
+            async for delta in chat.stream_response([{"role": "user", "content": "Hi"}])
         ]
 
     assert result == ["Hello", " world"]
@@ -165,7 +161,9 @@ async def test_stream_response_executes_fragmented_tool_call_then_streams_answer
             yield SimpleNamespace(
                 choices=[
                     SimpleNamespace(
-                        delta=SimpleNamespace(content=None, tool_calls=[tool_call_delta])
+                        delta=SimpleNamespace(
+                            content=None, tool_calls=[tool_call_delta]
+                        )
                     )
                 ]
             )
@@ -185,9 +183,7 @@ async def test_stream_response_executes_fragmented_tool_call_then_streams_answer
         patch.object(
             chat.client.chat.completions,
             "create",
-            new=AsyncMock(
-                side_effect=[tool_call_stream(), answer_stream()]
-            ),
+            new=AsyncMock(side_effect=[tool_call_stream(), answer_stream()]),
         ) as create,
         patch(
             "app.integrations.llm.chat.execute_tool",
@@ -284,9 +280,7 @@ async def test_stream_response_wraps_provider_error():
         new=AsyncMock(side_effect=RuntimeError("provider unavailable")),
     ):
         with pytest.raises(LLMNotAvailableError):
-            async for _ in chat.stream_response(
-                [{"role": "user", "content": "Hi"}]
-            ):
+            async for _ in chat.stream_response([{"role": "user", "content": "Hi"}]):
                 pass
 
 

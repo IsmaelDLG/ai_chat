@@ -27,9 +27,7 @@ class InvalidMessageRoleError(Exception):
 
     def __init__(self, message_id: int):
         self.message_id = message_id
-        super().__init__(
-            f"Message with ID: {message_id} is not a user message."
-        )
+        super().__init__(f"Message with ID: {message_id} is not a user message.")
 
 
 class ConversationSaveError(Exception):

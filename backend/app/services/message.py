@@ -10,7 +10,12 @@ from app.core.exceptions import (
     LLMNotAvailableError,
 )
 
-from app.models.message import ChatCompletionMessage, MessageCreateFullDTO, MessageDTO, Role
+from app.models.message import (
+    ChatCompletionMessage,
+    MessageCreateFullDTO,
+    MessageDTO,
+    Role,
+)
 from app.dataaccess.repositories.conversation import ConversationRepository
 from app.dataaccess.repositories.message import MessageRepository
 from app.models.conversation import ConversationDTO
@@ -61,15 +66,20 @@ class MessageService:
         if not conversation:
             raise ConversationNotFoundError(conversation_id)
 
-        conversation_messages = await self.repository.get_by_conversation_id(conversation_id)
-        messages_parsed = [ChatCompletionMessage.model_validate(message.model_dump()) for message in conversation_messages]
+        conversation_messages = await self.repository.get_by_conversation_id(
+            conversation_id
+        )
+        messages_parsed = [
+            ChatCompletionMessage.model_validate(message.model_dump())
+            for message in conversation_messages
+        ]
         messages = [message.model_dump() for message in messages_parsed]
         return message, messages
 
     async def generate_response(self, message_id: int) -> MessageDTO:
         message, messages = await self._get_response_context(message_id)
         conversation_id = message.conversation_id
-        
+
         response_str = await generate_response(messages)
 
         assistant_message = MessageCreateFullDTO(
@@ -107,10 +117,10 @@ class MessageService:
                     conversation_id=conversation_id,
                     role=Role.ASSISTANT,
                     content=delta,
-                    created_at=created_at
+                    created_at=created_at,
                 )
 
-                yield dto.model_dump_json() + "\n"  
+                yield dto.model_dump_json() + "\n"
         except asyncio.CancelledError:
             # Manejar la cancelación de la solicitud
             print("La solicitud fue cancelada por el cliente.")
@@ -132,4 +142,3 @@ class MessageService:
                 yield result.model_dump_json() + "\n"
             except Exception:
                 raise MessageSaveError(assistant_message.content)
-        

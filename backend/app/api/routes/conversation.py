@@ -23,6 +23,7 @@ async def get_all(
     response: list[ConversationDTO] = await service.get_all_conversations()
     return response
 
+
 @router.put("/{conversation_id}/title/generate", response_model=ConversationDTO)
 async def generate_title(
     conversation_id: int,
@@ -30,4 +31,3 @@ async def generate_title(
 ) -> None:
     response: ConversationDTO = await service.generate_title(conversation_id)
     return response
-    

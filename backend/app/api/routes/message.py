@@ -55,5 +55,5 @@ async def create_stream(
 ):
     return StreamingResponse(
         await service.generate_response_stream(message_id),
-        media_type="application/x-ndjson"
+        media_type="application/x-ndjson",
     )

@@ -70,10 +70,10 @@ def test_generate_response_routes_by_message_id(client, message_service):
     message_service.generate_response.assert_awaited_once_with(10)
 
 
-def test_generate_response_returns_not_found_for_unknown_message(client, message_service):
-    message_service.generate_response = AsyncMock(
-        side_effect=MessageNotFoundError(404)
-    )
+def test_generate_response_returns_not_found_for_unknown_message(
+    client, message_service
+):
+    message_service.generate_response = AsyncMock(side_effect=MessageNotFoundError(404))
 
     response = client.post("/api/messages/404/response")
 
@@ -85,9 +85,7 @@ def test_generate_stream_routes_by_message_id(client, message_service):
     async def message_stream():
         yield '{"id": null, "content": "Hi"}\n'
 
-    message_service.generate_response_stream = AsyncMock(
-        return_value=message_stream()
-    )
+    message_service.generate_response_stream = AsyncMock(return_value=message_stream())
 
     response = client.post("/api/messages/10/response/sse")
 

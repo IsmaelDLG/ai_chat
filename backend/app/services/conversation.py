@@ -32,8 +32,16 @@ class ConversationService:
         if not messages:
             raise ConversationNotFoundError(conversation_id)
 
-        messages_parsed = [ChatCompletionMessage.model_validate(message.model_dump()) for message in messages]
-        messages_parsed.append(ChatCompletionMessage(role="user", content="Based on the conversation so far, what would be a good title? Please, generate one in the language of the previous messages. Return it as plain text, without quotes or any other formatting. Keep it short."))
+        messages_parsed = [
+            ChatCompletionMessage.model_validate(message.model_dump())
+            for message in messages
+        ]
+        messages_parsed.append(
+            ChatCompletionMessage(
+                role="user",
+                content="Based on the conversation so far, what would be a good title? Please, generate one in the language of the previous messages. Return it as plain text, without quotes or any other formatting. Keep it short.",
+            )
+        )
         messages = [message.model_dump() for message in messages_parsed]
 
         response_str = await generate_response(messages)
@@ -45,6 +53,3 @@ class ConversationService:
             raise ConversationSaveError()
 
         return conversation
-
-
-        

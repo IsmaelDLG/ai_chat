@@ -46,9 +46,7 @@ async def message_not_found_handler(request: Request, exc: MessageNotFoundError)
 
 
 @app.exception_handler(InvalidMessageRoleError)
-async def invalid_message_role_handler(
-    request: Request, exc: InvalidMessageRoleError
-):
+async def invalid_message_role_handler(request: Request, exc: InvalidMessageRoleError):
     return JSONResponse(
         status_code=status.HTTP_400_BAD_REQUEST, content={"detail": str(exc)}
     )

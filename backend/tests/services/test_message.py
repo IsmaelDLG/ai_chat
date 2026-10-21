@@ -163,7 +163,8 @@ async def test_generate_response_uses_saved_history_without_resaving_user_messag
         result = await service.generate_response(user_message.id)
 
     assert result == assistant_response
-    generate_response.assert_awaited_once_with([
+    generate_response.assert_awaited_once_with(
+        [
             {"role": Role.USER, "content": "Hello"},
             {"role": Role.ASSISTANT, "content": "Earlier reply"},
         ]
@@ -180,9 +181,7 @@ async def test_generate_response_raises_llm_error_without_saving_assistant():
     user_message = make_message()
     message_repository = MagicMock()
     message_repository.get_by_id = AsyncMock(return_value=user_message)
-    message_repository.get_by_conversation_id = AsyncMock(
-        return_value=[user_message]
-    )
+    message_repository.get_by_conversation_id = AsyncMock(return_value=[user_message])
     message_repository.save = AsyncMock()
     conversation_repository = MagicMock()
     conversation_repository.get_by_id = AsyncMock(return_value=make_conversation())
@@ -209,9 +208,7 @@ async def test_generate_response_stream_emits_deltas_then_saved_response():
     )
     message_repository = MagicMock()
     message_repository.get_by_id = AsyncMock(return_value=user_message)
-    message_repository.get_by_conversation_id = AsyncMock(
-        return_value=[user_message]
-    )
+    message_repository.get_by_conversation_id = AsyncMock(return_value=[user_message])
     message_repository.save = AsyncMock(return_value=assistant_response)
     conversation_repository = MagicMock()
     conversation_repository.get_by_id = AsyncMock(return_value=make_conversation())
