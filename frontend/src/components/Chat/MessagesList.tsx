@@ -28,7 +28,7 @@ const MessagesList: React.FC<MessagesListProps> = ({
     });
 
     previousConversationId.current = conversationId;
-  }, [messages]);
+  }, [messages, conversationId]);
 
   const [showTopGradient, setShowTopGradient] = useState(false);
   const [showBottomGradient, setShowBottomGradient] = useState(false);

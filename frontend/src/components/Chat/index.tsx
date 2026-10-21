@@ -52,7 +52,7 @@ function Chat() {
   useEffect(() => {
     if (!conversation?.title && messages.length > 1 && !isLoading)
       generateConversationTitle()
-  }, [conversation, messages, isLoading])
+  }, [conversation, messages, isLoading, generateConversationTitle])
 
 
   return (
