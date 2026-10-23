@@ -150,31 +150,12 @@ Esto permitió ejecutar el proyecto completo de forma reproducible y simplificó
 
 Se añadieron tool_calls (web_search) con DDGS para que el modelo pueda consultar en internet, tanto en mensajes normales como en streaming.
 
-## Milestone 10 — CI/CD (fase actual)
+---
 
-### Objetivo
+## Milestone 10 — CI/CD
 
-Automatizar validación, empaquetado y despliegue del proyecto para asegurar calidad a cada cambio.
-
-### Tareas previstas
-
-- [x] Crear GitHub Actions
-- [x] Ejecutar tests automáticamente en pull requests y main
-- [ ] Añadir linting y formateo
-- [ ] Construir contenedores Docker de backend y frontend
-- [ ] Preparar despliegue automático o semi-automático
-- [ ] Añadir control de versiones y release flow
-
-### Beneficios
-
-- reducen errores humanos
-- validan cambios antes de mergear
-- permiten despliegues repetibles
-- ayudan a mantener la calidad del producto
-
-### Resultado esperado
-
-Un flujo reproducible donde cada cambio se prueba, se valida y se empaqueta antes de llegar a producción.
+Se han creado workflow para validar los cambios y publicar las imagenes de forma autmática.
+También se ha añadido el release drafter para poder generar las release-notes a partir de los commits/prs automaticamente.
 
 ---
 
@@ -232,68 +213,19 @@ Una vez que el backend, frontend, LLM y despliegue estén funcionando, el siguie
 
 ---
 
-## Fuera de scope de esta primera iteración
-
-Estas capacidades no forman parte del MVP inicial y se deberían incorporar más adelante, cuando el sistema base esté estabilizado:
-
-- [ ] RAG
-- [ ] Embeddings
-- [ ] Vector Database
-- [ ] Subida de documentos
-- [ ] Agentes complejos
-- [ ] Kubernetes
-- [ ] Terraform
-- [ ] Microservicios
-- [ ] Autenticación
-- [ ] Multiusuario
-- [ ] Redis
-- [ ] Fine-tuning
-- [ ] MCP
-- [ ] Arquitectura event-driven
-- [ ] Azure AI Foundry
-
-Estas funcionalidades se abordarán cuando el proyecto ya tenga una base sólida en backend, frontend, despliegue y calidad operativa.
-
----
-
 ## Definition of Done — Proyecto MVP
 
 El MVP del proyecto se considerará completo cuando:
 
-- [ ] FastAPI funcionando correctamente
-- [ ] `GET /health` operativo
-- [ ] `POST /api/chat` funcionando
-- [ ] LLM local o remoto integrado
-- [ ] Conversaciones persistentes
-- [ ] PostgreSQL configurado y operativo
-- [ ] Streaming implementado
-- [ ] Web Search funcionando
-- [ ] Tests básicos pasando
-- [ ] Docker Compose preparado
-- [ ] CI/CD básico activo
+- [x] FastAPI funcionando correctamente
+- [x] `GET /health` operativo
+- [x] `POST /api/chat` funcionando
+- [x] LLM local o remoto integrado
+- [x] Conversaciones persistentes
+- [x] PostgreSQL configurado y operativo
+- [x] Streaming implementado
+- [x] Web Search funcionando
+- [x] Tests básicos pasando
+- [x] Docker Compose preparado
+- [x] CI/CD básico activo
 - [ ] Aplicación desplegada en Azure
-
----
-
-## Siguiente acción inmediata
-
-La siguiente tarea crítica es completar el Milestone 9: Web Search.
-
-### Prioridades concretas
-
-1. Elegir un proveedor de búsqueda web compatible con la arquitectura actual.
-2. Crear `SearchService` en el backend.
-3. Definir la herramienta `web_search` y su interfaz con el LLM.
-4. Implementar tool calling para permitir que el modelo consulte Internet.
-5. Validar que la respuesta final incorpora información externa y fuentes útiles.
-6. Añadir tests para cubrir el flujo completo.
-
-Una vez validado este paso, el siguiente bloque natural será CI/CD y después Azure.
-
----
-
-## Conclusión
-
-El proyecto ya ha superado las fases básicas de infraestructura, IA local, memoria, streaming y despliegue local. Ahora está en la etapa donde la diferencia real entre un MVP útil y una herramienta más avanzada se produce por capacidades como búsqueda web, automatización y despliegue cloud.
-
-El siguiente gran salto no es añadir complejidad por sí misma, sino mejorar la calidad del sistema con información actual, validación automatizada y puesta en producción robusta.
