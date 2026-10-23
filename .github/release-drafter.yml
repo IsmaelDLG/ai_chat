@@ -1,0 +1,45 @@
+name-template: 'v$RESOLVED_VERSION'
+tag-template: 'v$RESOLVED_VERSION'
+
+categories:
+  - title: '🚀 Nuevas características'
+    labels:
+      - 'feature'
+      - 'enhancement'
+    prefix: 'feat:'
+  - title: '🐛 Corrección de errores'
+    labels:
+      - 'fix'
+      - 'bug'
+    prefix: 'fix:'
+  - title: '🧰 Mantenimiento y tareas'
+    labels:
+      - 'chore'
+      - 'refactor'
+      - 'docs'
+      - 'ci'
+    prefix: 'chore:'
+
+version-resolver:
+  major:
+    labels:
+      - 'breaking-change'
+  minor:
+    labels:
+      - 'feature'
+      - 'enhancement'
+    prefix: 'feat:'
+  patch:
+    labels:
+      - 'fix'
+      - 'bug'
+    prefix: 'fix:'
+  default: patch
+
+template: |
+  ## ¿Qué hay de nuevo en esta versión?
+
+  $CHANGES
+
+  ---
+  **Agradecimientos:** $CONTRIBUTORS
