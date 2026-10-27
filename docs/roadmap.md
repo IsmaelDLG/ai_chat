@@ -159,7 +159,60 @@ También se ha añadido el release drafter para poder generar las release-notes 
 
 ---
 
-## Milestone 11 — Azure
+## Milestone 11 - Mover BBDD a carpeta a parte
+
+### Objetivo
+
+Actualmente el proyecto de persistencia en alembic vive en la misma carpeta que el backend. Se ha decidido mover la BBDD a una carpeta separada, con todo lo necesario para que pueda ser ejecutado a parte.
+
+### Tareas previstas
+
+- [ ] Crear carpeta nueva para la BBDD.
+- [ ] Crear entorno de desarrollo para el proyecto de persistencia.
+- [ ] Limpiar el entorno de backend de las dependencias exclusivas del entorno de persistencia.
+- [ ] Repasar Dockerfiles y compose.
+
+---
+
+## Milestone 12 — Securización backend
+
+### Objetivo
+
+Antes de publicar la aplicación en internet hay que securizarla y implementar mecanismos de control para protegerla de usos indebidos.
+
+### Tareas previstas
+
+- [ ] Implementar autenticación y autorización con Github.
+- [ ] Proteger endpoints endpoints de la aplicación con la autorización.
+- [ ] Forzar HTTPS.
+- [ ] Cookies y protección CSRF.
+- [ ] Implementar CORS para mi frontend.
+- [ ] Implementar rate limiting.
+- [ ] Límites de uso en el chat y en el web_search.
+- [ ] Mover todos los secretos fuera del código.
+- [ ] Añadir logs sin información sensible.
+
+--- 
+
+## Milestone 13 - Mejoras frontend
+
+### Objetivo
+
+Alinear el frontend con los cambios de securización del backend y otras correcciones importantes.
+
+### Tareas previstas
+
+- [ ] Añadir login, logout y gestión de sesión
+- [ ] Renderizado de markdown de los mensajes
+- [ ] Corregir funcionalidad de generar titulo
+- [ ] HTTPS, cookies, CORS y CSRF
+- [ ] Eliminar secretos y quitar persistencia del navegador si hay.
+- [ ] CSP, auditoria de dependencias
+- [ ] Configuración de producción
+
+---
+
+## Milestone 14 — Azure
 
 ### Objetivo
 
